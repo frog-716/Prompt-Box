@@ -5,14 +5,18 @@
  * 可以叠加，标签之间是「与」关系（都命中才显示）。
  */
 
-import { computed, ref, type Ref } from 'vue';
+import { computed, ref, watchEffect, type Ref } from 'vue';
 
 import { filterPrompts } from '@/domain/prompt';
-import type { Prompt, PromptFilter } from '@/domain/types';
+import type { Folder, Prompt, PromptFilter, TagStat } from '@/domain/types';
 
 export type FolderSelection = string | null | 'all';
 
-export function useFilters(prompts: Ref<Prompt[]>) {
+export function useFilters(
+  prompts: Ref<Prompt[]>,
+  folders: Ref<Folder[]>,
+  tagStats: Ref<TagStat[]>,
+) {
   const query = ref('');
   const folderId = ref<FolderSelection>('all');
   const tags = ref<string[]>([]);
@@ -28,6 +32,22 @@ export function useFilters(prompts: Ref<Prompt[]>) {
       tags: tags.value,
     };
     return filterPrompts(prompts.value, filter);
+  });
+
+  // 另一界面删除当前筛选项时，自动清除失效条件，避免列表被锁死为空。
+  watchEffect(() => {
+    const selectedFolder = folderId.value;
+    if (
+      selectedFolder !== 'all' &&
+      selectedFolder !== null &&
+      !folders.value.some((folder) => folder.id === selectedFolder)
+    ) {
+      folderId.value = 'all';
+    }
+
+    const validTags = new Set(tagStats.value.map((stat) => stat.name));
+    const remainingTags = tags.value.filter((tag) => validTags.has(tag));
+    if (remainingTags.length !== tags.value.length) tags.value = remainingTags;
   });
 
   function selectFolder(next: FolderSelection): void {

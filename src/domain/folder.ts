@@ -9,13 +9,17 @@ import type { Folder, Prompt } from './types';
 
 /** 新建文件夹。名称首尾空白会被清理。 */
 export function createFolder(name: string, id: string, now: number): Folder {
-  return { id, name: name.trim(), createdAt: now };
+  return { id, name: name.trim().replace(/\s+/g, ' '), createdAt: now };
 }
 
 /** 重命名文件夹。 */
 export function renameFolder(folders: readonly Folder[], id: string, name: string): Folder[] {
-  const trimmed = name.trim();
+  const trimmed = name.trim().replace(/\s+/g, ' ');
   if (!trimmed) return [...folders];
+  const normalizedName = trimmed.toLowerCase();
+  if (folders.some((folder) => folder.id !== id && folder.name.toLowerCase() === normalizedName)) {
+    return [...folders];
+  }
   return folders.map((folder) => (folder.id === id ? { ...folder, name: trimmed } : folder));
 }
 

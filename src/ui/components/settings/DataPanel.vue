@@ -1,12 +1,7 @@
 <script setup lang="ts">
-/**
- * 数据备份块。
- *
- * 数据只存在这台浏览器里，卸载扩展就没了 —— 所以导出是这一页最该做的事，
- * 放在最前面。清空是不可逆操作，用内联二次确认挡住手滑。
- */
+/** Markdown 导出与二次确认的数据清空。 */
 
-import { ref } from 'vue';
+import { onBeforeUnmount, ref } from 'vue';
 
 defineProps<{
   promptCount: number;
@@ -15,25 +10,11 @@ defineProps<{
 
 const emit = defineEmits<{
   export: [];
-  import: [file: File];
   clear: [];
 }>();
 
-const fileInput = ref<HTMLInputElement | null>(null);
 const confirmingClear = ref(false);
 let confirmTimer: ReturnType<typeof setTimeout> | undefined;
-
-function pickFile(): void {
-  fileInput.value?.click();
-}
-
-function onFileChange(event: Event): void {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  // 清空 value，这样连续选同一个文件也能再次触发 change
-  input.value = '';
-  if (file) emit('import', file);
-}
 
 function requestClear(): void {
   if (!confirmingClear.value) {
@@ -47,32 +28,25 @@ function requestClear(): void {
   confirmingClear.value = false;
   emit('clear');
 }
+
+onBeforeUnmount(() => {
+  if (confirmTimer !== undefined) clearTimeout(confirmTimer);
+});
 </script>
 
 <template>
   <section class="panel">
     <header class="panel-head">
-      <h2 class="panel-title">数据备份</h2>
+      <h2 class="panel-title">数据</h2>
       <p class="panel-desc">
-        数据全部保存在这台电脑的浏览器里，不会上传到任何服务器。
-        换电脑或重装浏览器前，请先导出一份。
+        prompt-box-markdown-v1（.md）：按修改时间倒序，含标题、分类、标签、时间与原文；空文件夹也会列出。
       </p>
     </header>
 
-    <p class="stat-line">
-      当前共 <strong>{{ promptCount }}</strong> 条提示词、<strong>{{ folderCount }}</strong> 个文件夹
-    </p>
+    <p class="stat-line">{{ promptCount }} 条提示词 · {{ folderCount }} 个文件夹</p>
 
     <div class="panel-actions">
-      <button type="button" class="primary" @click="emit('export')">导出备份</button>
-      <button type="button" @click="pickFile">导入备份</button>
-      <input
-        ref="fileInput"
-        type="file"
-        accept="application/json,.json"
-        hidden
-        @change="onFileChange"
-      />
+      <button type="button" class="primary" @click="emit('export')">导出 Markdown</button>
       <button
         type="button"
         class="danger"
@@ -114,11 +88,6 @@ function requestClear(): void {
   margin: 0 0 12px;
   font-size: 12px;
   color: var(--pb-text-muted);
-}
-
-.stat-line strong {
-  color: var(--pb-text);
-  font-weight: 500;
 }
 
 .panel-actions {

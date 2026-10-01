@@ -13,7 +13,7 @@ import { browser } from 'wxt/browser';
 import { defineBackground } from 'wxt/utils/define-background';
 
 import { createPrompt } from '@/domain/prompt';
-import { readData, writeData } from '@/infra/storage';
+import { updateData } from '@/infra/storage';
 import { AUTO_TITLE_MAX_LENGTH, MENU_SAVE_SELECTION_ID } from '@/shared/constants';
 import { createId, deriveTitle, timestamp } from '@/shared/utils';
 
@@ -34,7 +34,6 @@ async function saveSelection(text: string): Promise<void> {
   if (!content) return;
 
   try {
-    const data = await readData();
     const prompt = createPrompt(
       {
         title: deriveTitle(content, AUTO_TITLE_MAX_LENGTH),
@@ -45,7 +44,10 @@ async function saveSelection(text: string): Promise<void> {
       createId(),
       timestamp(),
     );
-    await writeData({ ...data, prompts: [prompt, ...data.prompts] });
+    await updateData((current) => ({
+      ...current,
+      prompts: [prompt, ...current.prompts],
+    }));
   } catch (error) {
     console.error('[Prompt Box] 保存选中文字失败：', error);
   }

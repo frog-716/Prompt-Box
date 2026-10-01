@@ -31,6 +31,7 @@ npm run build
 
 ```bash
 npm run dev        # 带热更新，会自动打开一个装了扩展的 Chrome
+npm test           # 领域逻辑与 Markdown 格式回归测试
 npm run verify     # 类型检查 + 分层依赖校验，提交前跑这个
 npm run build      # 生产构建
 ```
@@ -61,14 +62,23 @@ entrypoints  →  ui  →  infra  →  domain
 
 这条规则不靠自觉：`npm run check:arch` 会扫描全部源码，发现跨层引用就报错。
 
+项目结构与主流程见 [`MAP.md`](./MAP.md)。
+
 **完整的工程规范见 [`AGENTS.md`](./AGENTS.md)** —— 那也是所有 AI 编码工具的入口。
 
 ## 数据与隐私
 
 所有提示词存在 `chrome.storage.local` 里，也就是这台电脑的浏览器里。
-卸载扩展数据就没了，所以设置页提供了导出备份。
+卸载扩展会删除这些数据；设置页可导出 Markdown 文件。
 
-导出的 JSON 可以直接导入，也兼容原版 Prompt Manager 的备份格式。
+导出格式为 `prompt-box-markdown-v1`：
+
+- 文件名为 `prompt-box-时间戳.md`，提示词按修改时间倒序排列；
+- 文件夹清单包含未归类数量和空文件夹；
+- 每条提示词包含标题、文件夹、标签、修改时间和原文；
+- 正文放在 `text` 代码块中，围栏长度会避开正文里的反引号；末尾换行数单独标注。
+
+设置页只保留 Markdown 导出，不提供导入。
 
 ## 数据模型
 
@@ -82,8 +92,8 @@ entrypoints  →  ui  →  infra  →  domain
 }
 ```
 
-读取时会走一遍 `sanitizeData()` 修复脏数据 —— 手工编辑过的备份、旧版本残留、
-被别的东西写坏的内容，都不会让界面崩掉。
+读取时会走一遍 `sanitizeData()` 修复旧版本残留和异常数据。读取失败会明确提示，
+不会误显示为空库。界面修改使用共享锁基于最新快照写入，避免侧边栏与设置页互相覆盖。
 
 ## 来源
 

@@ -6,7 +6,7 @@
  * 删除文件夹不会连带删掉里面的提示词，它们只是退回「未归类」。
  */
 
-import { ref } from 'vue';
+import { onBeforeUnmount, ref } from 'vue';
 
 import type { Folder } from '@/domain/types';
 
@@ -60,16 +60,17 @@ function requestRemove(id: string): void {
     confirmingId.value = null;
   }, 3000);
 }
+
+onBeforeUnmount(() => {
+  if (confirmTimer !== undefined) clearTimeout(confirmTimer);
+});
 </script>
 
 <template>
   <section class="panel">
     <header class="panel-head">
       <h2 class="panel-title">文件夹</h2>
-      <p class="panel-desc">
-        每条提示词最多归入一个文件夹。删除文件夹不会删掉里面的提示词，
-        它们会退回「未归类」。
-      </p>
+      <p class="panel-desc">每条提示词选一个文件夹；删除后会退回未归类。</p>
     </header>
 
     <div class="add-row">
@@ -116,11 +117,9 @@ function requestRemove(id: string): void {
       </li>
     </ul>
 
-    <p v-else class="empty">还没有文件夹。不建也行 —— 标签同样能用来分类。</p>
+    <p v-else class="empty">还没有文件夹</p>
 
-    <p v-if="unclassifiedCount > 0" class="hint">
-      另有 {{ unclassifiedCount }} 条提示词尚未归入任何文件夹。
-    </p>
+    <p v-if="unclassifiedCount > 0" class="hint">{{ unclassifiedCount }} 条未归类</p>
   </section>
 </template>
 

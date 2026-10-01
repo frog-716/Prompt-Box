@@ -11,6 +11,7 @@ import PromptCard from './PromptCard.vue';
 
 defineProps<{
   prompts: Prompt[];
+  folderNames: Record<string, string>;
   copiedId: string | null;
   hasFilter: boolean;
 }>();
@@ -29,6 +30,7 @@ const emit = defineEmits<{
         v-for="prompt in prompts"
         :key="prompt.id"
         :prompt="prompt"
+        :folder-name="prompt.folderId === null ? '未归类' : (folderNames[prompt.folderId] ?? '未归类')"
         :copied="copiedId === prompt.id"
         @copy="emit('copy', $event)"
         @edit="emit('edit', $event)"

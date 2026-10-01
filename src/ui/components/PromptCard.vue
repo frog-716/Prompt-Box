@@ -6,7 +6,7 @@
  * 编辑与删除退到角落，删除还需要点两下（内联确认），避免手滑丢内容。
  */
 
-import { ref } from 'vue';
+import { onBeforeUnmount, ref } from 'vue';
 
 import { summarize } from '@/domain/prompt';
 import type { Prompt } from '@/domain/types';
@@ -14,6 +14,7 @@ import { formatDateTime } from '@/shared/utils';
 
 const props = defineProps<{
   prompt: Prompt;
+  folderName: string;
   copied: boolean;
 }>();
 
@@ -40,8 +41,16 @@ function requestRemove(): void {
 }
 
 function onKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Enter') emit('copy', props.prompt);
+  if (event.target !== event.currentTarget) return;
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    emit('copy', props.prompt);
+  }
 }
+
+onBeforeUnmount(() => {
+  if (confirmTimer !== undefined) clearTimeout(confirmTimer);
+});
 </script>
 
 <template>
@@ -65,6 +74,7 @@ function onKeydown(event: KeyboardEvent): void {
 
     <footer class="card-foot">
       <div class="card-tags">
+        <span class="card-folder">📁 {{ folderName }}</span>
         <span v-for="tag in prompt.tags" :key="tag" class="card-tag">#{{ tag }}</span>
       </div>
       <div class="card-actions">
@@ -171,6 +181,12 @@ function onKeydown(event: KeyboardEvent): void {
   background: var(--pb-accent-weak);
   border-radius: 999px;
   padding: 0 7px;
+  white-space: nowrap;
+}
+
+.card-folder {
+  font-size: 11px;
+  color: var(--pb-text-muted);
   white-space: nowrap;
 }
 

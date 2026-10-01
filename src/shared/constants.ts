@@ -19,5 +19,5 @@ export const MENU_SAVE_SELECTION_ID = 'prompt-box-save-selection';
 /** 通过右键菜单保存时，自动截取标题的最大长度。 */
 export const AUTO_TITLE_MAX_LENGTH = 24;
 
-/** 导出文件的命名前缀。 */
-export const EXPORT_FILE_PREFIX = 'prompt-box-backup';
+/** Markdown 导出文件的命名前缀。 */
+export const EXPORT_FILE_PREFIX = 'prompt-box';

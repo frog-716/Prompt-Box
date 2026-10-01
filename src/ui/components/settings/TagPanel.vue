@@ -6,7 +6,7 @@
  * 一次改动会作用于所有引用它的提示词。界面上要写清楚这一点。
  */
 
-import { ref } from 'vue';
+import { onBeforeUnmount, ref } from 'vue';
 
 import type { TagStat } from '@/domain/types';
 
@@ -49,15 +49,17 @@ function requestRemove(tag: string): void {
     confirmingName.value = null;
   }, 3000);
 }
+
+onBeforeUnmount(() => {
+  if (confirmTimer !== undefined) clearTimeout(confirmTimer);
+});
 </script>
 
 <template>
   <section class="panel">
     <header class="panel-head">
       <h2 class="panel-title">标签</h2>
-      <p class="panel-desc">
-        标签在新建提示词时随手添加。这里改名或删除会作用于所有用到它的提示词。
-      </p>
+      <p class="panel-desc">标签可多选；改名或删除会同步到关联提示词。</p>
     </header>
 
     <ul v-if="tagStats.length > 0" class="list">
@@ -94,7 +96,7 @@ function requestRemove(tag: string): void {
       </li>
     </ul>
 
-    <p v-else class="empty">还没有标签。新建或编辑提示词时，在「标签」一栏输入即可。</p>
+    <p v-else class="empty">在提示词编辑页添加标签</p>
   </section>
 </template>
 

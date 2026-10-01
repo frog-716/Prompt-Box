@@ -67,11 +67,13 @@ src/
 ├── domain/                 # 纯业务逻辑
 │   ├── types.ts            # Prompt / Folder / PromptBoxData 等模型
 │   ├── prompt.ts           # 提示词的增删改查、筛选、标签操作
-│   └── folder.ts           # 文件夹的增删改
+│   ├── folder.ts           # 文件夹的增删改
+│   └── markdown.ts         # Markdown 导出格式
 ├── infra/                  # 浏览器 API 适配
-│   ├── storage.ts          # chrome.storage.local 封装 + 脏数据修复
+│   ├── storage.ts          # chrome.storage.local 封装与跨界面同步
+│   ├── sanitize.ts         # 旧格式兼容与脏数据修复
 │   ├── clipboard.ts        # 复制，含降级方案
-│   └── backup.ts           # 导入导出
+│   └── markdown-export.ts  # Markdown 文件下载
 ├── ui/
 │   ├── sidepanel/App.vue   # 侧边栏根组件
 │   ├── settings/App.vue    # 设置页根组件
@@ -80,6 +82,8 @@ src/
 │   └── styles/global.css   # 设计令牌 + 全局样式
 └── shared/                 # 常量与通用工具
 ```
+
+完整结构与数据流见 [`MAP.md`](./MAP.md)。领域与导出格式测试位于 `tests/`。
 
 ---
 
@@ -91,6 +95,7 @@ npm run dev          # 开发模式，带热更新，自动打开 Chrome
 npm run build        # 生产构建，产物在 .output/chrome-mv3
 npm run typecheck    # 类型检查
 npm run check:arch   # 校验分层依赖方向
+npm test             # 领域逻辑与导出格式回归测试
 npm run verify       # 一次跑完 typecheck + check:arch
 ```
 
@@ -103,20 +108,22 @@ npm run verify       # 一次跑完 typecheck + check:arch
 ### 数据流
 
 ```
-用户操作 → 组件 emit → composables 调 domain 函数算出新数据
-        → infra/storage 落盘 → chrome.storage.onChanged 广播 → 各界面同步
+用户操作 → composables 调 domain 函数
+        → infra/storage 在共享锁内读取最新快照并写回
+        → chrome.storage.onChanged 广播 → 各界面同步
 ```
 
-**唯一写入点**是 `useLibrary` 里的 `commit()`。任何新增的写操作都要走它，
-不要另起炉灶直接写 storage —— 否则侧边栏和设置页会不同步。
+界面的写操作统一经过 `useLibrary.commit()`；右键菜单也调用
+`infra/storage.updateData()`。该方法使用共享 Web Lock 串行读改写，
+避免并行打开侧边栏和设置页时用旧快照覆盖新数据。不要直接写 storage。
 
 ### 数据模型
 
 - 存储键只有一个：`promptBox`，结构见 `domain/types.ts` 的 `PromptBoxData`。
-- 结构变更时递增 `SCHEMA_VERSION`，并在 `infra/storage.ts` 的 `sanitizeData()`
+- 结构变更时递增 `SCHEMA_VERSION`，并在 `infra/sanitize.ts` 的 `sanitizeData()`
   里补迁移逻辑。**永远不要**假定存储里的数据是干净的。
-- 提示词用 `id`（uuid）做主键；`uuid` 是原版 Prompt Manager 的字段名，
-  导入它的备份时靠 `sanitizePrompt()` 兼容。
+- 提示词用 `id`（uuid）做主键；`sanitizePrompt()` 兼容旧版本地数据里的
+  `uuid` 字段。设置页不提供导入功能。
 
 ### 界面
 
@@ -135,7 +142,7 @@ npm run verify       # 一次跑完 typecheck + check:arch
 
 | 想做什么 | 改哪里 |
 |---|---|
-| 加一个提示词字段 | `domain/types.ts` → `sanitizePrompt()` → 表单组件 |
+| 加一个提示词字段 | `domain/types.ts` → `infra/sanitize.ts` 的 `sanitizePrompt()` → 表单组件 |
 | 加一种筛选维度 | `domain/prompt.ts` 的 `filterPrompts()` → `useFilters` → `FilterBar.vue` |
 | 加一个设置项 | `ui/components/settings/` 下新建 panel → `ui/settings/App.vue` 组装 |
 | 加一个右键菜单项 | `entrypoints/background.ts` 的 `buildContextMenu()` |
@@ -146,7 +153,7 @@ npm run verify       # 一次跑完 typecheck + check:arch
 
 ## 7. 提交前自查
 
-- [ ] `npm run verify` 全绿
+- [ ] `npm test` 与 `npm run verify` 全绿
 - [ ] 没有把业务逻辑写进 `.vue` 组件
 - [ ] 没有在 `domain/` 里引入浏览器 API
 - [ ] 新增的存储字段有对应的 sanitize 逻辑

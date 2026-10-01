@@ -17,6 +17,7 @@ const props = defineProps<{
   prompt: Prompt | null;
   folders: Folder[];
   tagSuggestions: string[];
+  saving: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -50,7 +51,15 @@ watch(
   { immediate: true },
 );
 
+watch(
+  () => props.folders.map((folder) => folder.id),
+  (ids) => {
+    if (folderId.value !== null && !ids.includes(folderId.value)) folderId.value = null;
+  },
+);
+
 function submit(): void {
+  if (props.saving) return;
   if (!content.value.trim()) {
     error.value = '内容不能为空';
     contentEl.value?.focus();
@@ -113,7 +122,9 @@ function onKeydown(event: KeyboardEvent): void {
     <p v-if="error" class="editor-error">{{ error }}</p>
 
     <div class="editor-actions">
-      <button type="submit" class="primary">保存</button>
+      <button type="submit" class="primary" :disabled="saving">
+        {{ saving ? '保存中…' : '保存' }}
+      </button>
       <button type="button" @click="emit('cancel')">取消</button>
     </div>
   </form>

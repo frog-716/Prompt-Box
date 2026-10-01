@@ -2,15 +2,14 @@
 /**
  * 设置页根组件。
  *
- * 侧边栏负责「记和取」，这里负责「整理和兜底」：
- * 备份、文件夹、标签。三个块各自独立，互不依赖。
+ * 侧边栏负责「记和取」，这里负责 Markdown 导出和分类管理。
  */
 
 import { computed } from 'vue';
 
-import { downloadBackup, readBackupFile } from '@/infra/backup';
+import { downloadMarkdown } from '@/infra/markdown-export';
 import { SCHEMA_VERSION } from '@/shared/constants';
-import BackupPanel from '@/ui/components/settings/BackupPanel.vue';
+import DataPanel from '@/ui/components/settings/DataPanel.vue';
 import FolderPanel from '@/ui/components/settings/FolderPanel.vue';
 import TagPanel from '@/ui/components/settings/TagPanel.vue';
 import ToastBar from '@/ui/components/ToastBar.vue';
@@ -18,6 +17,9 @@ import { useLibrary } from '@/ui/composables/useLibrary';
 import { useToast } from '@/ui/composables/useToast';
 
 const {
+  ready,
+  loadError,
+  reload,
   allPrompts,
   folders,
   tagStats,
@@ -26,7 +28,6 @@ const {
   removeFolder,
   renameTagEverywhere,
   removeTagEverywhere,
-  replaceAll,
   clearAll,
 } = useLibrary();
 
@@ -46,64 +47,116 @@ const unclassifiedCount = computed(
 );
 
 function handleExport(): void {
-  downloadBackup({
-    version: SCHEMA_VERSION,
-    prompts: allPrompts.value,
-    folders: folders.value,
-  });
-  show('已导出备份文件');
-}
-
-async function handleImport(file: File): Promise<void> {
   try {
-    const data = await readBackupFile(file);
-    await replaceAll(data);
-    show(`已导入 ${data.prompts.length} 条提示词`);
+    downloadMarkdown({
+      version: SCHEMA_VERSION,
+      prompts: allPrompts.value,
+      folders: folders.value,
+    });
+    show('已导出 Markdown');
   } catch (error) {
-    show(error instanceof Error ? error.message : '导入失败', { tone: 'error' });
+    console.error('[Prompt Box] 导出失败：', error);
+    show('导出失败，请重试', { tone: 'error' });
   }
 }
 
 async function handleClear(): Promise<void> {
-  await clearAll();
-  show('已清空全部数据');
+  try {
+    await clearAll();
+    show('已清空');
+  } catch (error) {
+    console.error('[Prompt Box] 清空数据失败：', error);
+    show('清空失败，数据未更改', { tone: 'error' });
+  }
 }
 
 async function handleAddFolder(name: string): Promise<void> {
-  const folder = await addFolder(name);
-  show(folder ? `已添加「${folder.name}」` : '名称重复或为空', folder ? {} : { tone: 'error' });
+  try {
+    const folder = await addFolder(name);
+    show(folder ? `已添加「${folder.name}」` : '名称重复或为空', folder ? {} : { tone: 'error' });
+  } catch (error) {
+    console.error('[Prompt Box] 添加文件夹失败：', error);
+    show('添加失败，数据未更改', { tone: 'error' });
+  }
+}
+
+async function handleRenameFolder(id: string, name: string): Promise<void> {
+  try {
+    const result = await renameFolder(id, name);
+    if (result === 'duplicate') show('文件夹名称已存在', { tone: 'error' });
+    else if (result === 'renamed') show('已重命名');
+  } catch (error) {
+    console.error('[Prompt Box] 重命名文件夹失败：', error);
+    show('重命名失败，数据未更改', { tone: 'error' });
+  }
+}
+
+async function handleRemoveFolder(id: string): Promise<void> {
+  try {
+    await removeFolder(id);
+    show('文件夹已删除，提示词保留');
+  } catch (error) {
+    console.error('[Prompt Box] 删除文件夹失败：', error);
+    show('删除失败，数据未更改', { tone: 'error' });
+  }
+}
+
+async function handleRenameTag(from: string, to: string): Promise<void> {
+  try {
+    await renameTagEverywhere(from, to);
+    show('标签已更新');
+  } catch (error) {
+    console.error('[Prompt Box] 重命名标签失败：', error);
+    show('重命名失败，数据未更改', { tone: 'error' });
+  }
+}
+
+async function handleRemoveTag(tag: string): Promise<void> {
+  try {
+    await removeTagEverywhere(tag);
+    show('标签已删除');
+  } catch (error) {
+    console.error('[Prompt Box] 删除标签失败：', error);
+    show('删除失败，数据未更改', { tone: 'error' });
+  }
 }
 </script>
 
 <template>
   <main class="settings">
-    <header class="settings-head">
-      <h1 class="settings-title">设置</h1>
-      <p class="settings-sub">提示词本 · 所有数据只保存在这台电脑上</p>
-    </header>
+    <div v-if="!ready" class="load-state">
+      <p>{{ loadError ? '读取失败，数据未更改' : '正在读取…' }}</p>
+      <button v-if="loadError" type="button" @click="reload">重试</button>
+    </div>
 
-    <BackupPanel
-      :prompt-count="allPrompts.length"
-      :folder-count="folders.length"
-      @export="handleExport"
-      @import="handleImport"
-      @clear="handleClear"
-    />
+    <template v-else>
+      <header class="settings-head">
+        <h1 class="settings-title">设置</h1>
+        <p class="settings-sub">数据仅保存在本机</p>
+      </header>
 
-    <FolderPanel
-      :folders="folders"
-      :counts="folderCounts"
-      :unclassified-count="unclassifiedCount"
-      @add="handleAddFolder"
-      @rename="renameFolder"
-      @remove="removeFolder"
-    />
+      <DataPanel
+        :prompt-count="allPrompts.length"
+        :folder-count="folders.length"
+        @export="handleExport"
+        @clear="handleClear"
+      />
 
-    <TagPanel
-      :tag-stats="tagStats"
-      @rename="renameTagEverywhere"
-      @remove="removeTagEverywhere"
-    />
+      <FolderPanel
+        :folders="folders"
+        :counts="folderCounts"
+        :unclassified-count="unclassifiedCount"
+        @add="handleAddFolder"
+        @rename="handleRenameFolder"
+        @remove="handleRemoveFolder"
+      />
+
+      <TagPanel
+        :tag-stats="tagStats"
+        @rename="handleRenameTag"
+        @remove="handleRemoveTag"
+      />
+    </template>
 
     <ToastBar :message="message" :tone="tone" />
   </main>
@@ -133,5 +186,17 @@ async function handleAddFolder(name: string): Promise<void> {
   margin: 0;
   font-size: 12px;
   color: var(--pb-text-muted);
+}
+
+.load-state {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 72px 0;
+  color: var(--pb-text-muted);
+}
+
+.load-state p {
+  margin: 0;
 }
 </style>
