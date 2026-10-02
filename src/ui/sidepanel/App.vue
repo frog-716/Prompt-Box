@@ -9,11 +9,10 @@
  * 组件本身不认识 storage，composable 不认识 DOM。
  */
 
-import { computed, onUnmounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import { copyText } from '@/infra/clipboard';
 import { openOptionsPage } from '@/infra/runtime';
-import { COPY_FEEDBACK_MS } from '@/shared/constants';
 import type { Prompt, PromptDraft } from '@/domain/types';
 import AppHeader from '@/ui/components/AppHeader.vue';
 import FilterBar from '@/ui/components/FilterBar.vue';
@@ -31,44 +30,35 @@ const {
   prompts,
   folders,
   tagStats,
-  unclassifiedCount,
   savePrompt,
   deletePrompt,
 } = useLibrary();
 
-const {
-  query,
-  folderId,
-  tags,
-  visible,
-  selectFolder,
-  toggleTag,
-  clearTags,
-} = useFilters(prompts, folders, tagStats);
+const { query, folderId, tags, visible, selectFolder, toggleTag } = useFilters(prompts, folders, tagStats);
 
 const { message, tone, show } = useToast();
 
 const editorOpen = ref(false);
 const editing = ref<Prompt | null>(null);
 const saving = ref(false);
-const copiedId = ref<string | null>(null);
-let copiedTimer: ReturnType<typeof setTimeout> | undefined;
+const saveError = ref('');
+const allowSaveAsNew = ref(false);
 
 const tagSuggestions = computed(() => tagStats.value.map((stat) => stat.name));
 const folderNames = computed<Record<string, string>>(() =>
   Object.fromEntries(folders.value.map((folder) => [folder.id, folder.name])),
 );
-const hasFilter = computed(
-  () => query.value.trim() !== '' || folderId.value !== 'all' || tags.value.length > 0,
-);
-
 function openCreate(): void {
   editing.value = null;
+  saveError.value = '';
+  allowSaveAsNew.value = false;
   editorOpen.value = true;
 }
 
 function openEdit(prompt: Prompt): void {
-  editing.value = prompt;
+  editing.value = { ...prompt, tags: [...prompt.tags] };
+  saveError.value = '';
+  allowSaveAsNew.value = false;
   editorOpen.value = true;
 }
 
@@ -77,17 +67,27 @@ function closeEditor(): void {
   editing.value = null;
 }
 
-async function handleSave(draft: PromptDraft): Promise<void> {
+async function handleSave(draft: PromptDraft, asNew = false): Promise<void> {
   if (saving.value) return;
   saving.value = true;
-  const isEdit = editing.value !== null;
+  const original = asNew ? null : editing.value;
+  const isEdit = original !== null;
+  saveError.value = '';
   try {
-    await savePrompt(draft, editing.value?.id ?? null);
+    const result = await savePrompt(draft, original);
+    if (result !== 'saved') {
+      saveError.value = result === 'missing'
+        ? '这条提示词已被删除，草稿已保留，可另存为新提示词。'
+        : '这条提示词已在其他页面修改，草稿已保留，可另存或返回查看。';
+      allowSaveAsNew.value = true;
+      return;
+    }
     closeEditor();
     show(isEdit ? '已更新' : '已保存');
   } catch (error) {
     console.error('[Prompt Box] 保存提示词失败：', error);
-    show('保存失败，数据未更改', { tone: 'error' });
+    saveError.value = '保存失败，草稿已保留，请重试。';
+    show(saveError.value, { tone: 'error' });
   } finally {
     saving.value = false;
   }
@@ -99,11 +99,7 @@ async function handleCopy(prompt: Prompt): Promise<void> {
     show('复制失败，请重试', { tone: 'error' });
     return;
   }
-  copiedId.value = prompt.id;
-  if (copiedTimer !== undefined) clearTimeout(copiedTimer);
-  copiedTimer = setTimeout(() => {
-    copiedId.value = null;
-  }, COPY_FEEDBACK_MS);
+  show('已复制原文');
 }
 
 async function handleRemove(prompt: Prompt): Promise<void> {
@@ -120,16 +116,14 @@ function openSettings(): void {
   openOptionsPage();
 }
 
-onUnmounted(() => {
-  if (copiedTimer !== undefined) clearTimeout(copiedTimer);
-});
 </script>
 
 <template>
   <div class="app">
-    <div v-if="!ready" class="load-state">
-      <p>{{ loadError ? '读取失败，数据未更改' : '正在读取…' }}</p>
-      <button v-if="loadError" type="button" @click="reload">重试</button>
+    <div v-if="!ready" class="load-state" :role="loadError ? 'alert' : 'status'">
+      <p class="state-title">{{ loadError ? '暂时无法读取提示词' : '正在打开提示词本…' }}</p>
+      <p v-if="loadError" class="state-copy">本机数据没有被更改。请检查后重试。</p>
+      <button v-if="loadError" type="button" class="state-retry" @click="reload">重新读取</button>
     </div>
 
     <PromptEditor
@@ -138,7 +132,10 @@ onUnmounted(() => {
       :folders="folders"
       :tag-suggestions="tagSuggestions"
       :saving="saving"
+      :save-error="saveError"
+      :allow-save-as-new="allowSaveAsNew"
       @save="handleSave"
+      @save-new="handleSave($event, true)"
       @cancel="closeEditor"
     />
 
@@ -150,19 +147,14 @@ onUnmounted(() => {
         :tags="tags"
         :folders="folders"
         :tag-stats="tagStats"
-        :total-count="prompts.length"
-        :unclassified-count="unclassifiedCount"
         @update:query="query = $event"
         @select-folder="selectFolder"
         @toggle-tag="toggleTag"
-        @clear-tags="clearTags"
       />
       <div class="app-body">
         <PromptList
           :prompts="visible"
           :folder-names="folderNames"
-          :copied-id="copiedId"
-          :has-filter="hasFilter"
           @copy="handleCopy"
           @edit="openEdit"
           @remove="handleRemove"
@@ -184,19 +176,52 @@ onUnmounted(() => {
 
 .app-body {
   flex: 1;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
   overflow-y: auto;
 }
 
+.app-body :deep(.list) { flex: 1; min-height: 100%; }
+
 .load-state {
   display: grid;
-  place-content: center;
-  gap: 8px;
+  align-content: center;
+  justify-items: center;
+  gap: var(--pb-space-9);
   flex: 1;
+  padding: var(--pb-space-28) var(--pb-space-22);
   text-align: center;
   color: var(--pb-text-muted);
 }
 
-.load-state p {
-  margin: 0;
+.state-title,
+.state-copy {
+  margin: var(--pb-space-0);
 }
+
+.state-title {
+  color: var(--pb-text);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.state-copy {
+  max-width: 240px;
+  color: var(--pb-text-muted);
+  font-size: 12px;
+}
+
+.state-retry {
+  margin-top: var(--pb-space-5);
+  border-color: var(--pb-accent);
+  background: var(--pb-accent);
+  color: var(--pb-on-accent);
+}
+
+.state-retry:hover:not(:disabled) {
+  border-color: var(--pb-accent-hover);
+  background: var(--pb-accent-hover);
+}
+
 </style>

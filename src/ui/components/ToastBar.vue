@@ -15,6 +15,8 @@ defineProps<{
 <template>
   <Transition name="toast">
     <div v-if="message" class="toast" :class="`toast-${tone}`" role="status">
+      <svg v-if="tone !== 'error'" class="toast-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+      <svg v-else class="toast-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 8v4m0 4h.01" /></svg>
       {{ message }}
     </div>
   </Transition>
@@ -24,14 +26,17 @@ defineProps<{
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 16px;
+  bottom: 24px;
   transform: translateX(-50%);
   max-width: calc(100% - 28px);
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: var(--pb-space-8);
+  padding: var(--pb-space-8) var(--pb-space-16);
+  border-radius: var(--pb-radius);
+  font-size: 13px;
   background: var(--pb-text);
-  color: var(--pb-bg);
+  color: var(--pb-white);
   pointer-events: none;
   z-index: 20;
   white-space: nowrap;
@@ -39,9 +44,11 @@ defineProps<{
   text-overflow: ellipsis;
 }
 
+.toast-icon { width: 16px; height: 16px; flex: 0 0 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
 .toast-error {
   background: var(--pb-danger);
-  color: #ffffff;
+  color: var(--pb-on-accent);
 }
 
 .toast-enter-active,

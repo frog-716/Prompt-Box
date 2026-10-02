@@ -1,9 +1,6 @@
 <script setup lang="ts">
 /**
- * 筛选区：搜索框 + 文件夹一行 + 标签一行。
- *
- * 把三者放一起是因为它们解决同一个问题 ——「现在想看哪一批」。
- * 点已选中的文件夹或标签可以取消选择，不需要额外的「清除」按钮。
+ * 搜索、文件夹下拉与标签按钮，按 Gemini A 原型排列。
  */
 
 import type { Folder, TagStat } from '@/domain/types';
@@ -15,75 +12,51 @@ defineProps<{
   tags: string[];
   folders: Folder[];
   tagStats: TagStat[];
-  totalCount: number;
-  unclassifiedCount: number;
 }>();
 
 const emit = defineEmits<{
   'update:query': [value: string];
   'select-folder': [value: FolderSelection];
   'toggle-tag': [tag: string];
-  'clear-tags': [];
 }>();
 </script>
 
 <template>
   <div class="filter-bar">
-    <input
-      :value="query"
-      type="search"
-      class="search-input"
-      placeholder="搜索标题、内容或标签"
-      autocomplete="off"
-      @input="emit('update:query', ($event.target as HTMLInputElement).value)"
-    />
-
-    <div v-if="folders.length > 0" class="pill-row">
-      <span class="pill-row-label">文件夹</span>
-      <button
-        type="button"
-        class="pill"
-        :class="{ 'pill-active': folderId === 'all' }"
-        @click="emit('select-folder', 'all')"
-      >
-        全部 <span class="pill-count">{{ totalCount }}</span>
-      </button>
-      <button
-        v-for="folder in folders"
-        :key="folder.id"
-        type="button"
-        class="pill"
-        :class="{ 'pill-active': folderId === folder.id }"
-        @click="emit('select-folder', folder.id)"
-      >
-        {{ folder.name }}
-      </button>
-      <button
-        v-if="unclassifiedCount > 0"
-        type="button"
-        class="pill"
-        :class="{ 'pill-active': folderId === null }"
-        @click="emit('select-folder', null)"
-      >
-        未归类 <span class="pill-count">{{ unclassifiedCount }}</span>
-      </button>
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+      <input
+        :value="query"
+        type="search"
+        class="search-input"
+        placeholder="搜索标题、原文或标签..."
+        autocomplete="off"
+        @input="emit('update:query', ($event.target as HTMLInputElement).value)"
+      />
     </div>
 
-    <div v-if="tagStats.length > 0" class="pill-row">
-      <span class="pill-row-label">标签</span>
+    <div class="folder-select-wrap">
+      <svg class="folder-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" /></svg>
+      <select
+        class="folder-select"
+        :value="folderId === 'all' ? 'all' : folderId === null ? '__unclassified__' : folderId"
+        @change="emit('select-folder', ($event.target as HTMLSelectElement).value === 'all' ? 'all' : ($event.target as HTMLSelectElement).value === '__unclassified__' ? null : ($event.target as HTMLSelectElement).value)"
+      >
+        <option value="all">全部</option>
+        <option v-for="folder in folders" :key="folder.id" :value="folder.id">{{ folder.name }}</option>
+        <option value="__unclassified__">未归类</option>
+      </select>
+    </div>
+
+    <div v-if="tagStats.length > 0" class="tag-row">
       <button
         v-for="stat in tagStats"
         :key="stat.name"
         type="button"
-        class="pill"
-        :class="{ 'pill-active': tags.includes(stat.name) }"
+        class="tag-pill"
+        :class="{ 'tag-pill-active': tags.includes(stat.name) }"
         @click="emit('toggle-tag', stat.name)"
-      >
-        #{{ stat.name }} <span class="pill-count">{{ stat.count }}</span>
-      </button>
-      <button v-if="tags.length > 0" type="button" class="pill pill-reset" @click="emit('clear-tags')">
-        清除标签
-      </button>
+      >#{{ stat.name }}</button>
     </div>
   </div>
 </template>
@@ -92,54 +65,97 @@ const emit = defineEmits<{
 .filter-bar {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px 14px 12px;
+  gap: var(--pb-space-12);
+  padding: var(--pb-space-12) var(--pb-space-16);
   border-bottom: 1px solid var(--pb-border);
+  background: var(--pb-paper-overlay-20);
+}
+
+.search-wrap { position: relative; }
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 9px;
+  z-index: 1;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--pb-text-muted);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .search-input {
-  font-size: 12px;
+  min-height: 34px;
+  padding: var(--pb-space-6) var(--pb-space-12) var(--pb-space-6) var(--pb-space-36);
+  border-radius: var(--pb-radius);
+  font-size: 13px;
+  background: var(--pb-white-overlay-60);
 }
 
-.pill-row {
+.folder-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--pb-space-8);
+}
+
+.folder-icon {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--pb-text-muted);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.folder-select {
+  width: auto;
+  max-width: 100%;
+  min-height: auto;
+  border: 0;
+  padding: var(--pb-space-0);
+  background: transparent;
+  font-size: 12px;
+  color: var(--pb-text);
+  cursor: pointer;
+}
+
+.folder-select:focus { box-shadow: none; }
+
+.tag-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
+  gap: var(--pb-space-6);
+  padding-top: var(--pb-space-4);
 }
 
-.pill-row-label {
-  font-size: 11px;
-  color: var(--pb-text-faint);
-  margin-right: 2px;
+.tag-pill {
+  min-height: 23px;
+  border: 0;
+  border-radius: var(--pb-radius);
+  padding: var(--pb-space-1) var(--pb-space-8);
+  font-size: 12px;
+  color: var(--pb-chip-text);
+  background: var(--pb-surface-soft);
 }
 
-.pill {
-  font-size: 11px;
-  padding: 2px 9px;
-  border-radius: 999px;
-  color: var(--pb-text-muted);
-  border-color: var(--pb-border);
-  white-space: nowrap;
-}
+.tag-pill:hover:not(:disabled) { background: var(--pb-border); }
 
-.pill-active {
-  background: var(--pb-accent-weak);
+.tag-pill-active {
+  background: var(--pb-accent);
   border-color: var(--pb-accent);
-  color: var(--pb-accent-text);
+  color: var(--pb-on-accent);
+  box-shadow: var(--pb-shadow-card);
 }
 
-.pill-active:hover:not(:disabled) {
-  background: var(--pb-accent-weak);
+.tag-pill-active:hover:not(:disabled) {
+  background: var(--pb-accent-hover);
 }
 
-.pill-count {
-  opacity: 0.65;
-  margin-left: 2px;
-}
-
-.pill-reset {
-  border-style: dashed;
-  color: var(--pb-text-faint);
+@media (max-width: 340px) {
+  .filter-bar { padding-inline: var(--pb-space-12); }
 }
 </style>

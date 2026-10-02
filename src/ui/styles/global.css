@@ -1,51 +1,99 @@
 /**
- * 全局样式与设计令牌。
- *
- * 所有颜色、圆角、间距都走 CSS 变量，组件里不写死具体色值 ——
- * 这样换主题只需要改这一处。
+ * Gemini A「温润纸感」原型的全局设计令牌。
  */
 
 :root {
-  --pb-bg: #ffffff;
-  --pb-surface: #f5f6f8;
-  --pb-surface-hover: #eef0f3;
-  --pb-border: rgba(0, 0, 0, 0.1);
-  --pb-border-strong: rgba(0, 0, 0, 0.18);
-  --pb-text: #1a1d21;
-  --pb-text-muted: #6b7280;
-  --pb-text-faint: #9aa1ab;
-  --pb-accent: #378add;
-  --pb-accent-hover: #2f79c4;
-  --pb-accent-weak: #e6f1fb;
-  --pb-accent-text: #185fa5;
-  --pb-danger: #d64545;
-  --pb-danger-weak: #fdecec;
+  color-scheme: light;
 
+  --pb-bg: #f9f8f6;
+  --pb-surface: #fffdfc;
+  --pb-surface-hover: #e8e3de;
+  --pb-surface-soft: #f0ebe6;
+  --pb-surface-translucent: rgb(255 253 252 / 30%);
+  --pb-border: #e8e3de;
+  --pb-border-strong: #d7d0ca;
+  --pb-text: #2c2a29;
+  --pb-text-muted: #8a847f;
+  --pb-text-faint: #a49d97;
+  --pb-chip-text: #7a746f;
+  --pb-text-soft: #6b625e;
+  --pb-text-strong-muted: #5c5652;
+  --pb-text-date: #9a928c;
+  --pb-accent: #c77560;
+  --pb-accent-hover: #b36854;
+  --pb-accent-weak: #f0ebe6;
+  --pb-on-accent: #ffffff;
+  --pb-accent-ring: rgb(199 117 96 / 20%);
+  --pb-danger: #b85b50;
+  --pb-danger-text: #a84940;
+  --pb-danger-text-strong: #c45f55;
+  --pb-danger-text-soft: #d47a70;
+  --pb-danger-hover: #a9473d;
+  --pb-danger-button: #c75f50;
+  --pb-danger-button-hover: #b94c42;
+  --pb-danger-border: #eac7c3;
+  --pb-danger-border-strong: #f2c7c1;
+  --pb-danger-border-soft: #f4d5cf;
+  --pb-danger-surface: #fff3f1;
+  --pb-danger-surface-soft: #fff2f0;
+  --pb-danger-surface-hover: #fff5f4;
+  --pb-danger-surface-subtle: #fff1ef;
+  --pb-surface-subtle: #f7f5f3;
+  --pb-edit-underline: #8cb7da;
+  --pb-info-border: #dbe6f0;
+  --pb-info-bg: rgb(239 246 255 / 55%);
+  --pb-info-text: #355977;
+  --pb-white: #ffffff;
+  --pb-border-card: rgb(232 227 222 / 50%);
+  --pb-black-overlay-4: rgb(0 0 0 / 4%);
+  --pb-black-overlay-5: rgb(0 0 0 / 5%);
+  --pb-black-overlay-12: rgb(0 0 0 / 12%);
+  --pb-paper-overlay-20: rgb(255 253 252 / 20%);
+  --pb-paper-overlay-80: rgb(255 253 252 / 80%);
+  --pb-white-overlay-40: rgb(255 255 255 / 40%);
+  --pb-white-overlay-50: rgb(255 255 255 / 50%);
+  --pb-white-overlay-60: rgb(255 255 255 / 60%);
+  --pb-white-overlay-80: rgb(255 255 255 / 80%);
+  --pb-shadow-card: 0 1px 2px rgb(0 0 0 / 5%);
+  --pb-shadow-raised: 0 4px 6px rgb(0 0 0 / 10%);
+
+  --pb-radius-none: 0;
+  --pb-radius-3: 3px;
+  --pb-radius-4: 4px;
+  --pb-radius-5: 5px;
+  --pb-radius-8: 8px;
+  --pb-radius-pill: 999px;
   --pb-radius-sm: 6px;
-  --pb-radius: 8px;
-  --pb-radius-lg: 12px;
+  --pb-radius: 6px;
+
+  --pb-space-0: 0;
+  --pb-space-1: 1px;
+  --pb-space-2: 2px;
+  --pb-space-3: 3px;
+  --pb-space-4: 4px;
+  --pb-space-5: 5px;
+  --pb-space-6: 6px;
+  --pb-space-7: 7px;
+  --pb-space-8: 8px;
+  --pb-space-9: 9px;
+  --pb-space-10: 10px;
+  --pb-space-12: 12px;
+  --pb-space-14: 14px;
+  --pb-space-16: 16px;
+  --pb-space-18: 18px;
+  --pb-space-20: 20px;
+  --pb-space-22: 22px;
+  --pb-space-24: 24px;
+  --pb-space-28: 28px;
+  --pb-space-30: 30px;
+  --pb-space-32: 32px;
+  --pb-space-36: 36px;
+  --pb-space-40: 40px;
+  --pb-space-44: 44px;
 
   --pb-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --pb-bg: #1c1e22;
-    --pb-surface: #26292e;
-    --pb-surface-hover: #2f333a;
-    --pb-border: rgba(255, 255, 255, 0.12);
-    --pb-border-strong: rgba(255, 255, 255, 0.22);
-    --pb-text: #e8eaed;
-    --pb-text-muted: #9aa1ab;
-    --pb-text-faint: #767c85;
-    --pb-accent: #5aa3e8;
-    --pb-accent-hover: #74b2ee;
-    --pb-accent-weak: #1e3550;
-    --pb-accent-text: #9ecbf5;
-    --pb-danger: #e06c6c;
-    --pb-danger-weak: #3a2426;
-  }
+  --pb-font-display: Georgia, 'Songti SC', 'Noto Serif CJK SC', serif;
 }
 
 * {
@@ -53,9 +101,11 @@
 }
 
 html,
-body {
-  margin: 0;
-  padding: 0;
+body,
+#app {
+  min-height: 100%;
+  margin: var(--pb-space-0);
+  padding: var(--pb-space-0);
 }
 
 body {
@@ -68,46 +118,80 @@ body {
 }
 
 button {
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-  cursor: pointer;
+  min-height: 30px;
   border: 1px solid var(--pb-border);
-  background: transparent;
   border-radius: var(--pb-radius-sm);
-  padding: 4px 10px;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  padding: var(--pb-space-4) var(--pb-space-10);
+  background: var(--pb-surface);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease,
+    box-shadow 0.14s ease;
 }
 
 button:hover:not(:disabled) {
+  border-color: var(--pb-border-strong);
   background: var(--pb-surface-hover);
 }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex='0']:focus-visible {
+  outline: 2px solid var(--pb-accent);
+  outline-offset: 2px;
 }
 
 input,
 textarea,
 select {
-  font-family: inherit;
-  font-size: inherit;
-  color: var(--pb-text);
-  background: var(--pb-bg);
+  width: 100%;
   border: 1px solid var(--pb-border);
   border-radius: var(--pb-radius-sm);
-  padding: 6px 9px;
-  width: 100%;
+  padding: var(--pb-space-7) var(--pb-space-10);
+  background: var(--pb-surface);
+  color: var(--pb-text);
+  font: inherit;
+  transition:
+    border-color 0.14s ease,
+    box-shadow 0.14s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--pb-text-faint);
 }
 
 input:focus,
 textarea:focus,
 select:focus {
-  outline: none;
   border-color: var(--pb-accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--pb-accent-ring);
 }
 
-::placeholder {
-  color: var(--pb-text-faint);
+::selection {
+  background: var(--pb-accent-weak);
+  color: var(--pb-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

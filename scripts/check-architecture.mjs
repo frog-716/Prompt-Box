@@ -1,160 +1,151 @@
 #!/usr/bin/env node
-/**
- * 分层依赖校验。
- *
- * AGENTS.md 里写的依赖方向如果只靠人自觉，三个月后一定烂掉。
- * 这个脚本把它变成可执行的门禁：扫描 src 下所有源码，解析每条 import，
- * 判断它有没有跨层乱引。
- *
- * 用法：node scripts/check-architecture.mjs
- * 退出码 0 = 通过，1 = 有违规。
- */
-
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, relative, sep } from 'node:path';
+/** 分层与浏览器接口检查。解析语法树，避免把注释和字符串误认成代码。 */
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
+import { parse, compileTemplate } from 'vue/compiler-sfc';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(ROOT, 'src');
-
-/** 每一层允许引用的目标层，以及允许的外部包前缀。 */
 const RULES = {
-  domain: {
-    allowLayers: ['domain', 'shared'],
-    allowPackages: [],
-    note: '领域层必须是纯函数，不碰浏览器 API、不碰 Vue',
-  },
-  shared: {
-    allowLayers: ['shared'],
-    allowPackages: [],
-    note: '公共层不依赖任何业务层',
-  },
-  infra: {
-    allowLayers: ['domain', 'shared', 'infra'],
-    allowPackages: ['wxt'],
-    note: '基础设施层是浏览器 API 的唯一入口',
-  },
-  ui: {
-    allowLayers: ['domain', 'infra', 'shared', 'ui'],
-    allowPackages: ['vue'],
-    note: '表现层不能引入入口层',
-  },
-  entrypoints: {
-    allowLayers: ['domain', 'infra', 'shared', 'ui', 'entrypoints'],
-    allowPackages: ['vue', 'wxt'],
-    note: '入口层可以依赖所有下层',
-  },
+  domain: { layers: ['domain'], packages: [] },
+  shared: { layers: ['shared'], packages: [] },
+  infra: { layers: ['domain', 'shared', 'infra'], packages: ['wxt'] },
+  ui: { layers: ['domain', 'infra', 'shared', 'ui'], packages: ['vue'] },
+  entrypoints: { layers: ['domain', 'infra', 'shared', 'ui', 'entrypoints'], packages: ['vue', 'wxt'] },
 };
-
 const SOURCE_EXT = /\.(ts|vue|mts|js|mjs)$/;
-const SKIP_DIR = new Set(['node_modules', '.output', '.wxt']);
+const DOMAIN_GLOBALS = new Set(['chrome', 'browser', 'window', 'document', 'navigator', 'globalThis', 'self', 'crypto', 'localStorage', 'sessionStorage', 'fetch', 'setTimeout', 'setInterval']);
 
-/** 递归收集 src 下的源码文件。 */
 function collectFiles(dir) {
-  const found = [];
-  for (const entry of readdirSync(dir)) {
-    if (SKIP_DIR.has(entry)) continue;
-    const full = join(dir, entry);
-    if (statSync(full).isDirectory()) {
-      found.push(...collectFiles(full));
-    } else if (SOURCE_EXT.test(entry)) {
-      found.push(full);
-    }
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = join(dir, entry.name);
+    // 不跟随符号链接，避免扫描到项目之外。
+    if (entry.isSymbolicLink()) return [];
+    if (entry.isDirectory()) return collectFiles(full);
+    return SOURCE_EXT.test(entry.name) ? [full] : [];
+  });
+}
+
+function accessPath(node) {
+  if (ts.isIdentifier(node)) return [node.text];
+  if (ts.isPropertyAccessExpression(node)) return [...accessPath(node.expression), node.name.text];
+  if (ts.isElementAccessExpression(node) && ts.isStringLiteralLike(node.argumentExpression)) {
+    return [...accessPath(node.expression), node.argumentExpression.text];
   }
-  return found;
-}
-
-/** 文件属于哪一层（src 下的一级目录名）。 */
-function layerOf(absPath) {
-  const rel = relative(SRC, absPath);
-  return rel.split(sep)[0];
-}
-
-/** 提取源码里所有的 import / export-from 来源。 */
-function extractSpecifiers(code) {
-  const specs = [];
-  const patterns = [
-    /\bimport\s+(?:type\s+)?(?:[\s\S]*?\s+from\s+)?['"]([^'"]+)['"]/g,
-    /\bexport\s+(?:type\s+)?[\s\S]*?\s+from\s+['"]([^'"]+)['"]/g,
-    /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-  ];
-  for (const pattern of patterns) {
-    for (const match of code.matchAll(pattern)) {
-      if (match[1]) specs.push(match[1]);
-    }
+  if (ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isNonNullExpression(node)) {
+    return accessPath(node.expression);
   }
-  return specs;
+  return [];
 }
 
-/** 把 import 说明符解析成 src 下的绝对路径；外部包返回 null。 */
-function resolveSpecifier(spec, fromFile) {
-  if (spec.startsWith('@/')) return join(SRC, spec.slice(2));
-  if (spec.startsWith('.')) return join(dirname(fromFile), spec);
-  return null;
+function isReference(node) {
+  const parent = node.parent;
+  if (ts.isPropertyAccessExpression(parent) && parent.name === node) return false;
+  if ((ts.isPropertyAssignment(parent) || ts.isPropertyDeclaration(parent) || ts.isPropertySignature(parent) || ts.isMethodDeclaration(parent)) && parent.name === node) return false;
+  if ((ts.isVariableDeclaration(parent) || ts.isParameter(parent) || ts.isFunctionDeclaration(parent) || ts.isClassDeclaration(parent) || ts.isBindingElement(parent)) && parent.name === node) return false;
+  if (ts.isImportSpecifier(parent) || ts.isImportClause(parent) || ts.isNamespaceImport(parent)) return false;
+  if (ts.isTypeReferenceNode(parent)) return false;
+  return true;
 }
 
-function check() {
+/** 可独立调用，回归测试无需创建源码临时文件。 */
+export function checkSource(code, file, srcDir = SRC) {
+  const layer = relative(srcDir, file).split(sep)[0];
+  const rule = RULES[layer];
   const violations = [];
-  const files = collectFiles(SRC);
-
-  for (const file of files) {
-    const layer = layerOf(file);
-    const rule = RULES[layer];
-    if (!rule) continue;
-
-    const code = readFileSync(file, 'utf8');
-    const relFile = relative(ROOT, file);
-
-    for (const spec of extractSpecifiers(code)) {
-      const target = resolveSpecifier(spec, file);
-
-      if (target === null) {
-        const pkg = spec.startsWith('@')
-          ? spec.split('/').slice(0, 2).join('/')
-          : spec.split('/')[0];
-        const allowed = rule.allowPackages.some(
-          (name) => pkg === name || pkg.startsWith(`${name}/`),
-        );
-        if (!allowed) {
-          violations.push({
-            file: relFile,
-            layer,
-            spec,
-            reason: `不允许引入外部包「${pkg}」`,
-            note: rule.note,
-          });
-        }
-        continue;
-      }
-
-      const targetLayer = layerOf(target);
-      if (!rule.allowLayers.includes(targetLayer)) {
-        violations.push({
-          file: relFile,
-          layer,
-          spec,
-          reason: `「${layer}」层不允许引用「${targetLayer}」层`,
-          note: rule.note,
-        });
-      }
-    }
+  const seen = new Set();
+  function report(reason, spec = '') {
+    const key = `${reason}:${spec}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    violations.push({ file: relative(srcDir, file), reason, spec });
+  }
+  if (!rule) {
+    report(`未声明的源码层「${layer}」`);
+    return violations;
   }
 
-  return { files, violations };
+  function checkSpecifier(spec) {
+    const target = spec.startsWith('@/') ? resolve(srcDir, spec.slice(2))
+      : spec.startsWith('.') ? resolve(dirname(file), spec) : null;
+    if (target === null) {
+      const pkg = spec.startsWith('@') ? spec.split('/').slice(0, 2).join('/') : spec.split('/')[0];
+      if (!rule.packages.includes(pkg)) report(`不允许引入外部包「${pkg}」`, spec);
+      return;
+    }
+    const targetLayer = relative(srcDir, target).split(sep)[0];
+    if (!rule.layers.includes(targetLayer)) report(`「${layer}」层不允许引用「${targetLayer}」层`, spec);
+    if (layer === 'infra' && /\.vue$/.test(target)) report('基础设施层不能引用 Vue 组件', spec);
+  }
+
+  const scripts = file.endsWith('.vue') ? (() => {
+    const { descriptor, errors } = parse(code, { filename: file });
+    if (errors.length) report('Vue 文件解析失败');
+    for (const block of [descriptor.script, descriptor.scriptSetup]) {
+      if (block?.src) checkSpecifier(block.src);
+    }
+    const blocks = [descriptor.script?.content, descriptor.scriptSetup?.content].filter(Boolean);
+    if (descriptor.template) {
+      const template = compileTemplate({
+        source: descriptor.template.content, filename: file, id: 'architecture-scan',
+        compilerOptions: { expressionPlugins: ['typescript'] },
+      });
+      if (template.errors.length) report('Vue 模板解析失败');
+      blocks.push(template.code);
+    }
+    return blocks;
+  })() : [code];
+
+  for (const script of scripts) {
+    const source = ts.createSourceFile(file + '.ts', script, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    if (source.parseDiagnostics.length) report('源码语法解析失败');
+    function visit(node) {
+      if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteralLike(node.moduleSpecifier)) {
+        checkSpecifier(node.moduleSpecifier.text);
+      }
+      if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference) && node.moduleReference.expression && ts.isStringLiteralLike(node.moduleReference.expression)) {
+        checkSpecifier(node.moduleReference.expression.text);
+      }
+      if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument) && ts.isStringLiteralLike(node.argument.literal)) checkSpecifier(node.argument.literal.text);
+      if (ts.isCallExpression(node) && (node.expression.kind === ts.SyntaxKind.ImportKeyword || (ts.isIdentifier(node.expression) && node.expression.text === 'require'))) {
+        const spec = node.arguments[0];
+        if (spec && ts.isStringLiteralLike(spec)) checkSpecifier(spec.text);
+        else report('动态模块路径无法校验，请使用明确的导入路径');
+      }
+      if (ts.isIdentifier(node) && isReference(node)) {
+        if (layer === 'domain' && DOMAIN_GLOBALS.has(node.text)) report(`领域层不能使用「${node.text}」`);
+        if (layer === 'ui' && ['chrome', 'browser'].includes(node.text)) report('表现层的扩展接口必须经过 infra');
+      }
+      if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
+        const path = accessPath(node);
+        if (path[0] === '_ctx') path.shift();
+        if (layer === 'domain' && (path.join('.') === 'Date.now' || path.join('.') === 'Math.random')) report('领域层的时间和随机值必须由调用方传入');
+        if (layer === 'ui' && (
+          ['chrome', 'browser'].includes(path[0]) ||
+          (['window', 'globalThis', 'self'].includes(path[0]) && ['chrome', 'browser'].includes(path[1])) ||
+          (path[0] === 'navigator' && ['clipboard', 'locks', 'storage'].includes(path[1]))
+        )) report('表现层的浏览器接口必须经过 infra');
+      }
+      ts.forEachChild(node, visit);
+    }
+    visit(source);
+  }
+  return violations;
 }
 
-const { files, violations } = check();
-
-if (violations.length === 0) {
-  console.log(`架构校验通过：扫描 ${files.length} 个文件，依赖方向全部合规。`);
-  process.exit(0);
+export function checkProject(srcDir = SRC) {
+  const files = collectFiles(srcDir);
+  return { files, violations: files.flatMap((file) => checkSource(readFileSync(file, 'utf8'), file, srcDir)) };
 }
 
-console.error(`架构校验失败：发现 ${violations.length} 处违规。\n`);
-for (const item of violations) {
-  console.error(`  ${item.file}`);
-  console.error(`    import '${item.spec}'`);
-  console.error(`    → ${item.reason}`);
-  console.error(`    → 规则：${item.note}\n`);
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const { files, violations } = checkProject();
+  if (!violations.length) console.log(`架构校验通过：扫描 ${files.length} 个文件，分层与浏览器接口均合规。`);
+  else {
+    console.error(`架构校验失败：发现 ${violations.length} 处违规。`);
+    for (const item of violations) console.error(`  ${item.file}: ${item.reason}${item.spec ? ` (${item.spec})` : ''}`);
+    process.exitCode = 1;
+  }
 }
-process.exit(1);

@@ -12,18 +12,6 @@ export function timestamp(): number {
   return Date.now();
 }
 
-/** 尾部防抖：连续调用时只在停止一段时间后执行一次。 */
-export function debounce<A extends unknown[]>(
-  fn: (...args: A) => void,
-  wait: number,
-): (...args: A) => void {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  return (...args: A) => {
-    if (timer !== undefined) clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), wait);
-  };
-}
-
 /** 把时间戳格式化成「2026-09-29 20:31」这样的短文本。 */
 export function formatDateTime(value: number): string {
   const date = new Date(value);

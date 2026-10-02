@@ -13,9 +13,18 @@ const emit = defineEmits<{
 
 <template>
   <header class="header">
-    <h1 class="header-title">提示词本</h1>
+    <h1 class="header-title">
+      <svg class="header-message" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 4a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z" />
+      </svg>
+      提示词本
+    </h1>
     <div class="header-actions">
-      <button type="button" class="header-primary" @click="emit('create')">新建</button>
+      <button type="button" class="header-icon-btn" aria-label="新建提示词" title="新建" @click="emit('create')">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </button>
       <button
         type="button"
         class="header-icon-btn"
@@ -23,11 +32,9 @@ const emit = defineEmits<{
         title="设置"
         @click="emit('openSettings')"
       >
-        <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            fill="currentColor"
-            d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81a.488.488 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.488.488 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"
-          />
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" />
+          <path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .8v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.8l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.8-3H4a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .8-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.8V2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .8l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .8 3h.2a1.8 1.8 0 0 1 0 3.6H20a1.8 1.8 0 0 0-.6 3Z" />
         </svg>
       </button>
     </div>
@@ -39,47 +46,63 @@ const emit = defineEmits<{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  min-height: 48px;
+  padding: var(--pb-space-10) var(--pb-space-16);
   border-bottom: 1px solid var(--pb-border);
+  background: var(--pb-surface-translucent);
   flex-shrink: 0;
 }
 
 .header-title {
-  margin: 0;
-  font-size: 13px;
+  margin: var(--pb-space-0);
+  display: flex;
+  align-items: center;
+  gap: var(--pb-space-8);
+  font-family: var(--pb-font-display);
+  font-size: 16px;
   font-weight: 500;
+}
+
+.header-message {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--pb-accent);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 7px;
-}
-
-.header-primary {
-  background: var(--pb-accent);
-  border-color: var(--pb-accent);
-  color: #ffffff;
-  font-weight: 500;
-  font-size: 12px;
-  padding: 3px 11px;
-}
-
-.header-primary:hover:not(:disabled) {
-  background: var(--pb-accent-hover);
-  border-color: var(--pb-accent-hover);
+  gap: var(--pb-space-8);
 }
 
 .header-icon-btn {
   display: flex;
   align-items: center;
-  padding: 4px 6px;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: var(--pb-space-4);
   color: var(--pb-text-muted);
+  background: transparent;
   border-color: transparent;
+  border-radius: var(--pb-radius);
 }
 
 .header-icon-btn:hover:not(:disabled) {
   color: var(--pb-text);
-  border-color: var(--pb-border);
+  border-color: transparent;
+  background: var(--pb-black-overlay-5);
+}
+
+.header-icon-btn svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (max-width: 340px) {
+  .header { padding-inline: var(--pb-space-10); }
+  .header-actions { gap: var(--pb-space-6); }
 }
 </style>

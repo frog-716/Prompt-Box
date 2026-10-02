@@ -52,7 +52,7 @@ entrypoints  →  ui  →  infra  →  domain
 - `infra/` 里 import 任何 `.vue` 文件 —— 禁止。
 - 任何层反向依赖上层 —— 禁止。
 
-这些规则由 `npm run check:arch` 自动校验，提交前必须通过。
+这些规则由 `npm run check:arch` 解析 TS/Vue 语法树自动校验（包含模板表达式），提交前必须通过。
 
 ---
 
@@ -115,13 +115,15 @@ npm run verify       # 一次跑完 typecheck + check:arch
 
 界面的写操作统一经过 `useLibrary.commit()`；右键菜单也调用
 `infra/storage.updateData()`。该方法使用共享 Web Lock 串行读改写，
-避免并行打开侧边栏和设置页时用旧快照覆盖新数据。不要直接写 storage。
+避免并行打开侧边栏和设置页时用旧快照覆盖新数据。不要直接写 storage。编辑保存必须携带打开表单时的原记录；如果最新记录已变化或被删除，
+返回冲突或缺失结果，保留草稿，不显示保存成功。
 
 ### 数据模型
 
 - 存储键只有一个：`promptBox`，结构见 `domain/types.ts` 的 `PromptBoxData`。
 - 结构变更时递增 `SCHEMA_VERSION`，并在 `infra/sanitize.ts` 的 `sanitizeData()`
-  里补迁移逻辑。**永远不要**假定存储里的数据是干净的。
+  里补迁移逻辑。未知版本必须阻止写回，避免旧版本覆盖新结构。
+  **永远不要**假定存储里的数据是干净的。
 - 提示词用 `id`（uuid）做主键；`sanitizePrompt()` 兼容旧版本地数据里的
   `uuid` 字段。设置页不提供导入功能。
 

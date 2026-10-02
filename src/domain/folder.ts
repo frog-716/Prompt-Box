@@ -7,19 +7,45 @@
 
 import type { Folder, Prompt } from './types';
 
+export type FolderRenameResult = 'renamed' | 'unchanged' | 'duplicate' | 'missing';
+
+/** 文件夹名称统一清理与比较，创建、重命名和旧数据修复共用。 */
+export function normalizeFolderName(name: string): string {
+  return name.trim().replace(/\s+/g, ' ');
+}
+
+export function folderNameKey(name: string): string {
+  return normalizeFolderName(name).toLowerCase();
+}
+
+export function validateFolderName(
+  folders: readonly Folder[], name: string, exceptId: string | null = null,
+): 'valid' | 'empty' | 'duplicate' {
+  const key = folderNameKey(name);
+  if (!key) return 'empty';
+  return folders.some((folder) => folder.id !== exceptId && folderNameKey(folder.name) === key)
+    ? 'duplicate' : 'valid';
+}
+
+export function checkFolderRename(
+  folders: readonly Folder[], id: string, name: string,
+): FolderRenameResult {
+  const folder = folders.find((item) => item.id === id);
+  if (!folder) return 'missing';
+  const next = normalizeFolderName(name);
+  if (!next || folder.name === next) return 'unchanged';
+  return validateFolderName(folders, next, id) === 'duplicate' ? 'duplicate' : 'renamed';
+}
+
 /** 新建文件夹。名称首尾空白会被清理。 */
 export function createFolder(name: string, id: string, now: number): Folder {
-  return { id, name: name.trim().replace(/\s+/g, ' '), createdAt: now };
+  return { id, name: normalizeFolderName(name), createdAt: now };
 }
 
 /** 重命名文件夹。 */
 export function renameFolder(folders: readonly Folder[], id: string, name: string): Folder[] {
-  const trimmed = name.trim().replace(/\s+/g, ' ');
-  if (!trimmed) return [...folders];
-  const normalizedName = trimmed.toLowerCase();
-  if (folders.some((folder) => folder.id !== id && folder.name.toLowerCase() === normalizedName)) {
-    return [...folders];
-  }
+  if (checkFolderRename(folders, id, name) !== 'renamed') return [...folders];
+  const trimmed = normalizeFolderName(name);
   return folders.map((folder) => (folder.id === id ? { ...folder, name: trimmed } : folder));
 }
 

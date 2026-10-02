@@ -59,20 +59,40 @@ export function applyDraft(prompt: Prompt, draft: PromptDraft, now: number): Pro
   };
 }
 
-/** 把草稿转成提示词；带 id 表示编辑，不带表示新建。 */
+export type PromptSaveStatus = 'saved' | 'missing' | 'conflict';
+
+export type PromptSaveResult =
+  | { status: 'saved'; prompts: Prompt[] }
+  | { status: 'missing' | 'conflict'; prompts: readonly Prompt[] };
+
+/** 在最新快照上保存；编辑时核对打开表单时的原记录，不覆盖其他界面的修改。 */
 export function upsertPrompt(
   prompts: readonly Prompt[],
   draft: PromptDraft,
-  id: string | null,
+  original: Prompt | null,
   now: number,
   newId: string,
-): Prompt[] {
-  if (id === null) {
-    return [createPrompt(draft, newId, now), ...prompts];
+): PromptSaveResult {
+  if (original === null) {
+    return { status: 'saved', prompts: [createPrompt(draft, newId, now), ...prompts] };
   }
-  return prompts.map((prompt) =>
-    prompt.id === id ? applyDraft(prompt, draft, now) : prompt,
-  );
+  const current = prompts.find((prompt) => prompt.id === original.id);
+  if (!current) return { status: 'missing', prompts };
+  // 标签整理不改 updatedAt，因此同时比较可编辑字段，不能只比较时间戳。
+  if (
+    current.updatedAt !== original.updatedAt || current.createdAt !== original.createdAt ||
+    current.title !== original.title || current.content !== original.content ||
+    current.folderId !== original.folderId ||
+    current.tags.length !== original.tags.length ||
+    current.tags.some((tag, index) => tag !== original.tags[index])
+  ) return { status: 'conflict', prompts };
+
+  return {
+    status: 'saved',
+    prompts: prompts.map((prompt) =>
+      prompt.id === original.id ? applyDraft(prompt, draft, now) : prompt,
+    ),
+  };
 }
 
 /** 统计每个标签被多少条提示词引用，按引用次数降序、同次数按字母序。 */

@@ -49,16 +49,22 @@ function submitEdit(): void {
 }
 
 function requestRemove(id: string): void {
-  if (confirmingId.value === id) {
-    if (confirmTimer !== undefined) clearTimeout(confirmTimer);
-    confirmingId.value = null;
-    emit('remove', id);
-    return;
-  }
+  if (confirmTimer !== undefined) clearTimeout(confirmTimer);
   confirmingId.value = id;
   confirmTimer = setTimeout(() => {
     confirmingId.value = null;
   }, 3000);
+}
+
+function confirmRemove(id: string): void {
+  if (confirmTimer !== undefined) clearTimeout(confirmTimer);
+  confirmingId.value = null;
+  emit('remove', id);
+}
+
+function cancelRemove(): void {
+  if (confirmTimer !== undefined) clearTimeout(confirmTimer);
+  confirmingId.value = null;
 }
 
 onBeforeUnmount(() => {
@@ -67,177 +73,194 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="panel">
-    <header class="panel-head">
-      <h2 class="panel-title">文件夹</h2>
-      <p class="panel-desc">每条提示词选一个文件夹；删除后会退回未归类。</p>
-    </header>
+  <section class="section">
+    <h2 class="section-title">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" /></svg>
+      文件夹管理
+    </h2>
+    <div class="panel">
+      <div class="add-row">
+        <input
+          v-model="newName"
+          type="text"
+          placeholder="输入新文件夹名称..."
+          @keydown.enter.prevent="submitNew"
+        />
+        <button type="button" class="add-button" @click="submitNew">新增</button>
+      </div>
 
-    <div class="add-row">
-      <input
-        v-model="newName"
-        type="text"
-        placeholder="新文件夹名称"
-        @keydown.enter.prevent="submitNew"
-      />
-      <button type="button" @click="submitNew">添加</button>
-    </div>
+      <ul class="list">
+        <li class="row row-fixed">
+          <div class="folder-main">
+            <svg class="folder-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" /></svg>
+            <span class="folder-copy"><span class="row-name fixed-name">未归类</span><span class="row-count">包含 {{ unclassifiedCount }} 条提示词</span></span>
+          </div>
+        </li>
 
-    <ul v-if="folders.length > 0" class="list">
-      <li v-for="folder in folders" :key="folder.id" class="row">
-        <template v-if="editingId === folder.id">
+        <li v-for="folder in folders" :key="folder.id" class="row">
+          <template v-if="editingId === folder.id">
           <input
             v-model="editingName"
             type="text"
             class="row-input"
-            @keydown.enter.prevent="submitEdit"
-            @keydown.esc="editingId = null"
-          />
-          <div class="row-actions">
-            <button type="button" @click="submitEdit">保存</button>
-            <button type="button" @click="editingId = null">取消</button>
-          </div>
-        </template>
+            autofocus
+            @blur="submitEdit"
+              @keydown.enter.prevent="submitEdit"
+              @keydown.esc="editingId = null"
+            />
+          </template>
 
-        <template v-else>
-          <span class="row-name">{{ folder.name }}</span>
-          <span class="row-count">{{ counts[folder.id] ?? 0 }} 条</span>
-          <div class="row-actions">
-            <button type="button" @click="startEdit(folder)">改名</button>
-            <button
-              type="button"
-              class="row-danger"
-              :class="{ 'row-danger-armed': confirmingId === folder.id }"
-              @click="requestRemove(folder.id)"
-            >
-              {{ confirmingId === folder.id ? '确认删除？' : '删除' }}
+          <template v-else>
+            <button type="button" class="folder-main" @click="startEdit(folder)">
+              <svg class="folder-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" /></svg>
+              <span class="folder-copy"><span class="row-name">{{ folder.name }}</span><span class="row-count">包含 {{ counts[folder.id] ?? 0 }} 条提示词</span></span>
             </button>
-          </div>
-        </template>
-      </li>
-    </ul>
-
-    <p v-else class="empty">还没有文件夹</p>
-
-    <p v-if="unclassifiedCount > 0" class="hint">{{ unclassifiedCount }} 条未归类</p>
+            <div v-if="confirmingId === folder.id" class="delete-confirm">
+              <span>条目将移至未归类</span>
+              <button type="button" @click="cancelRemove">取消</button>
+              <button type="button" class="confirm-delete" @click="confirmRemove(folder.id)">确认</button>
+            </div>
+            <button v-else type="button" class="remove-button" :aria-label="`删除文件夹 ${folder.name}`" title="删除" @click="requestRemove(folder.id)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
+            </button>
+          </template>
+        </li>
+      </ul>
+    </div>
   </section>
 </template>
 
 <style scoped>
+.section { display: flex; flex-direction: column; gap: var(--pb-space-16); }
+.section-title { display: flex; align-items: center; gap: var(--pb-space-8); margin: var(--pb-space-0); font-family: var(--pb-font-display); font-size: 18px; font-weight: 500; }
+.section-title svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
 .panel {
-  border: 1px solid var(--pb-border);
-  border-radius: var(--pb-radius-lg);
-  padding: 16px 18px;
-  background: var(--pb-bg);
-}
-
-.panel-head {
-  margin-bottom: 12px;
-}
-
-.panel-title {
-  margin: 0 0 4px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.panel-desc {
-  margin: 0;
-  font-size: 12px;
-  color: var(--pb-text-muted);
-  line-height: 1.7;
+  border: 1px solid var(--pb-border-card);
+  border-radius: var(--pb-radius);
+  padding: var(--pb-space-20);
+  background: var(--pb-surface);
+  box-shadow: var(--pb-shadow-card);
 }
 
 .add-row {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--pb-space-12);
+  margin-bottom: var(--pb-space-24);
 }
 
-.add-row input {
-  flex: 1;
-}
+.add-row input { width: 100%; max-width: 360px; min-width: 0; padding: var(--pb-space-7) var(--pb-space-12); font-size: 12px; }
+.add-button { border-color: var(--pb-border); background: var(--pb-surface-soft); color: var(--pb-text-soft); font-size: 12px; }
+.add-button:hover:not(:disabled) { background: var(--pb-border); }
 
 .list {
   list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  margin: var(--pb-space-0);
+  padding: var(--pb-space-0);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--pb-space-12);
 }
 
 .row {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: var(--pb-radius-sm);
+  min-height: 56px;
+  gap: var(--pb-space-8);
+  padding: var(--pb-space-12);
+  border: 1px solid var(--pb-border);
+  border-radius: var(--pb-radius);
+  background: var(--pb-white);
+  transition: box-shadow .14s ease;
 }
 
-.row:hover {
-  background: var(--pb-surface);
+.row:hover { box-shadow: var(--pb-shadow-card); }
+.row-fixed { cursor: default; }
+
+.folder-main {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+  gap: var(--pb-space-12);
+  border: 0;
+  padding: var(--pb-space-0);
+  background: transparent;
+  text-align: left;
+}
+
+.folder-main:hover:not(:disabled) { background: transparent; }
+.folder-icon { width: 16px; height: 16px; flex: 0 0 16px; fill: none; stroke: var(--pb-text-muted); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.folder-copy { display: flex; min-width: 0; flex-direction: column; gap: var(--pb-space-2); }
+
+.row-input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-bottom: 2px solid var(--pb-edit-underline);
+  border-radius: var(--pb-radius-none);
+  padding: var(--pb-space-3) var(--pb-space-0);
+  background: transparent;
+  font-size: 13px;
+  outline: none;
 }
 
 .row-name {
-  flex: 1;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.row-input {
-  flex: 1;
-}
-
 .row-count {
-  font-size: 11px;
-  color: var(--pb-text-faint);
-  flex-shrink: 0;
-}
-
-.row-actions {
-  display: flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.row-actions button {
-  font-size: 11px;
-  padding: 2px 9px;
-  border-color: transparent;
+  font-size: 10px;
   color: var(--pb-text-muted);
+  flex-shrink: 0;
 }
 
-.row-actions button:hover:not(:disabled) {
-  border-color: var(--pb-border);
+.remove-button {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  min-height: 25px;
+  border: 0;
+  padding: var(--pb-space-4);
+  background: var(--pb-surface-subtle);
+  color: var(--pb-text-muted);
+  opacity: 0;
+  transition: opacity .14s ease, color .14s ease;
 }
 
-.row-danger {
+.row:hover .remove-button, .remove-button:focus-visible { opacity: 1; }
+.remove-button:hover:not(:disabled) { background: var(--pb-danger-surface-subtle); color: var(--pb-danger-text-strong); }
+.remove-button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+.delete-confirm {
+  position: absolute;
+  z-index: 3;
+  right: 8px;
+  top: 8px;
+  display: flex;
+  align-items: center;
+  gap: var(--pb-space-7);
+  padding: var(--pb-space-6) var(--pb-space-8);
+  border: 1px solid var(--pb-danger-border-soft);
+  border-radius: var(--pb-radius-4);
+  background: var(--pb-danger-surface);
   color: var(--pb-danger);
+  box-shadow: var(--pb-shadow-card);
+  font-size: 10px;
 }
 
-.row-danger-armed {
-  background: var(--pb-danger);
-  border-color: var(--pb-danger);
-  color: #ffffff;
-}
+.delete-confirm button { min-height: 22px; border: 0; padding: var(--pb-space-2) var(--pb-space-4); background: transparent; color: var(--pb-text-muted); font-size: 10px; }
+.delete-confirm .confirm-delete { color: var(--pb-danger-text-strong); font-weight: 600; }
 
-.row-danger-armed:hover:not(:disabled) {
-  background: var(--pb-danger);
-  border-color: var(--pb-danger);
-}
-
-.empty,
-.hint {
-  margin: 0;
-  font-size: 12px;
-  color: var(--pb-text-faint);
-  line-height: 1.8;
-}
-
-.hint {
-  margin-top: 8px;
+@media (max-width: 480px) {
+  .panel { padding: var(--pb-space-16); }
+  .list { grid-template-columns: 1fr; }
+  .remove-button { opacity: 1; }
 }
 </style>

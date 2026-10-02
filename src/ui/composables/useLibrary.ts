@@ -7,14 +7,16 @@
 
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
-import { createFolder, deleteFolder as deleteFolderDomain, renameFolder as renameFolderDomain, sortFolders } from '@/domain/folder';
-import { collectTagStats, removeTag, renameTag, sortPrompts, upsertPrompt } from '@/domain/prompt';
-import type { Folder, PromptBoxData, PromptDraft } from '@/domain/types';
+import {
+  createFolder, deleteFolder as deleteFolderDomain, renameFolder as renameFolderDomain,
+  sortFolders, countByFolder, validateFolderName, checkFolderRename,
+  type FolderRenameResult,
+} from '@/domain/folder';
+import { collectTagStats, removeTag, renameTag, sortPrompts, upsertPrompt, type PromptSaveStatus } from '@/domain/prompt';
+import type { Folder, Prompt, PromptBoxData, PromptDraft } from '@/domain/types';
 import { onDataChanged, readData, updateData } from '@/infra/storage';
 import { SCHEMA_VERSION } from '@/shared/constants';
 import { createId, timestamp } from '@/shared/utils';
-
-export type FolderRenameResult = 'renamed' | 'unchanged' | 'duplicate' | 'missing';
 
 function emptyData(): PromptBoxData {
   return { version: SCHEMA_VERSION, prompts: [], folders: [] };
@@ -31,14 +33,20 @@ export function useLibrary() {
   const allPrompts = computed(() => data.value.prompts);
   const folders = computed(() => sortFolders(data.value.folders));
   const tagStats = computed(() => collectTagStats(data.value.prompts));
-  const unclassifiedCount = computed(
-    () => data.value.prompts.filter((prompt) => prompt.folderId === null).length,
-  );
+  const counts = computed(() => countByFolder(data.value.prompts));
+  const folderCounts = computed(() => Object.fromEntries(
+    [...counts.value].filter((entry): entry is [string, number] => entry[0] !== null),
+  ));
+  const unclassifiedCount = computed(() => counts.value.get(null) ?? 0);
 
   /** 只有成功写入后才更新界面状态；失败时保留原快照并交给调用方反馈。 */
   async function commit(change: (current: PromptBoxData) => PromptBoxData): Promise<PromptBoxData> {
+    const revisionAtStart = syncRevision;
     const saved = await updateData(change);
-    data.value = saved;
+    if (revisionAtStart === syncRevision) {
+      syncRevision += 1;
+      data.value = saved;
+    }
     ready.value = true;
     loadError.value = false;
     return saved;
@@ -61,13 +69,16 @@ export function useLibrary() {
     }
   }
 
-  async function savePrompt(draft: PromptDraft, id: string | null): Promise<void> {
+  async function savePrompt(draft: PromptDraft, original: Prompt | null): Promise<PromptSaveStatus> {
     const now = timestamp();
     const newId = createId();
-    await commit((current) => ({
-      ...current,
-      prompts: upsertPrompt(current.prompts, draft, id, now, newId),
-    }));
+    let status: PromptSaveStatus = 'saved';
+    await commit((current) => {
+      const result = upsertPrompt(current.prompts, draft, original, now, newId);
+      status = result.status;
+      return result.status === 'saved' ? { ...current, prompts: result.prompts } : current;
+    });
+    return status;
   }
 
   async function deletePrompt(id: string): Promise<void> {
@@ -78,43 +89,23 @@ export function useLibrary() {
   }
 
   async function addFolder(name: string): Promise<Folder | null> {
-    const trimmed = name.trim().replace(/\s+/g, ' ');
-    if (!trimmed) return null;
-
     let created: Folder | null = null;
     await commit((current) => {
-      const duplicate = current.folders.some(
-        (folder) => folder.name.toLocaleLowerCase() === trimmed.toLocaleLowerCase(),
-      );
-      if (duplicate) return current;
+      if (validateFolderName(current.folders, name) !== 'valid') return current;
 
-      created = createFolder(trimmed, createId(), timestamp());
+      created = createFolder(name, createId(), timestamp());
       return { ...current, folders: [...current.folders, created] };
     });
     return created;
   }
 
   async function renameFolder(id: string, name: string): Promise<FolderRenameResult> {
-    const trimmed = name.trim().replace(/\s+/g, ' ');
-    if (!trimmed) return 'unchanged';
-
     let result: FolderRenameResult = 'missing';
     await commit((current) => {
-      const folder = current.folders.find((item) => item.id === id);
-      if (!folder) return current;
-      if (folder.name === trimmed) {
-        result = 'unchanged';
-        return current;
-      }
-      if (current.folders.some(
-        (item) => item.id !== id && item.name.toLocaleLowerCase() === trimmed.toLocaleLowerCase(),
-      )) {
-        result = 'duplicate';
-        return current;
-      }
-
-      result = 'renamed';
-      return { ...current, folders: renameFolderDomain(current.folders, id, trimmed) };
+      result = checkFolderRename(current.folders, id, name);
+      return result === 'renamed'
+        ? { ...current, folders: renameFolderDomain(current.folders, id, name) }
+        : current;
     });
     return result;
   }
@@ -161,6 +152,7 @@ export function useLibrary() {
     allPrompts,
     folders,
     tagStats,
+    folderCounts,
     unclassifiedCount,
     savePrompt,
     deletePrompt,

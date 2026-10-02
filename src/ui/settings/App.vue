@@ -5,8 +5,6 @@
  * 侧边栏负责「记和取」，这里负责 Markdown 导出和分类管理。
  */
 
-import { computed } from 'vue';
-
 import { downloadMarkdown } from '@/infra/markdown-export';
 import { SCHEMA_VERSION } from '@/shared/constants';
 import DataPanel from '@/ui/components/settings/DataPanel.vue';
@@ -21,6 +19,8 @@ const {
   loadError,
   reload,
   allPrompts,
+  folderCounts,
+  unclassifiedCount,
   folders,
   tagStats,
   addFolder,
@@ -32,19 +32,6 @@ const {
 } = useLibrary();
 
 const { message, tone, show } = useToast();
-
-const folderCounts = computed<Record<string, number>>(() => {
-  const counts: Record<string, number> = {};
-  for (const prompt of allPrompts.value) {
-    if (prompt.folderId === null) continue;
-    counts[prompt.folderId] = (counts[prompt.folderId] ?? 0) + 1;
-  }
-  return counts;
-});
-
-const unclassifiedCount = computed(
-  () => allPrompts.value.filter((prompt) => prompt.folderId === null).length,
-);
 
 function handleExport(): void {
   try {
@@ -124,38 +111,42 @@ async function handleRemoveTag(tag: string): Promise<void> {
 
 <template>
   <main class="settings">
-    <div v-if="!ready" class="load-state">
-      <p>{{ loadError ? '读取失败，数据未更改' : '正在读取…' }}</p>
-      <button v-if="loadError" type="button" @click="reload">重试</button>
+    <div v-if="!ready" class="load-state" :role="loadError ? 'alert' : 'status'">
+      <p class="state-title">{{ loadError ? '暂时无法读取提示词' : '正在打开提示词本…' }}</p>
+      <p v-if="loadError" class="state-copy">本机数据没有被更改。请检查后重试。</p>
+      <button v-if="loadError" type="button" class="state-retry" @click="reload">重新读取</button>
     </div>
 
     <template v-else>
       <header class="settings-head">
-        <h1 class="settings-title">设置</h1>
-        <p class="settings-sub">数据仅保存在本机</p>
+        <div>
+          <h1 class="settings-title">Prompt-Box 设置</h1>
+          <p class="settings-sub">管理本地数据、分类与标签。所有内容仅保存在这台设备。</p>
+        </div>
       </header>
 
-      <DataPanel
-        :prompt-count="allPrompts.length"
-        :folder-count="folders.length"
-        @export="handleExport"
-        @clear="handleClear"
-      />
+      <div class="settings-body">
+        <DataPanel
+          :prompt-count="allPrompts.length"
+          @export="handleExport"
+          @clear="handleClear"
+        />
 
-      <FolderPanel
-        :folders="folders"
-        :counts="folderCounts"
-        :unclassified-count="unclassifiedCount"
-        @add="handleAddFolder"
-        @rename="handleRenameFolder"
-        @remove="handleRemoveFolder"
-      />
+        <FolderPanel
+          :folders="folders"
+          :counts="folderCounts"
+          :unclassified-count="unclassifiedCount"
+          @add="handleAddFolder"
+          @rename="handleRenameFolder"
+          @remove="handleRemoveFolder"
+        />
 
-      <TagPanel
-        :tag-stats="tagStats"
-        @rename="handleRenameTag"
-        @remove="handleRemoveTag"
-      />
+        <TagPanel
+          :tag-stats="tagStats"
+          @rename="handleRenameTag"
+          @remove="handleRemoveTag"
+        />
+      </div>
     </template>
 
     <ToastBar :message="message" :tone="tone" />
@@ -164,39 +155,78 @@ async function handleRemoveTag(tag: string): Promise<void> {
 
 <style scoped>
 .settings {
+  width: 100%;
   max-width: 720px;
-  margin: 0 auto;
-  padding: 32px 24px 56px;
+  height: 720px;
+  margin: var(--pb-space-0) auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  overflow: hidden;
+  background: var(--pb-bg);
 }
 
 .settings-head {
-  margin-bottom: 4px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-shrink: 0;
+  padding: var(--pb-space-24) var(--pb-space-32);
+  border-bottom: 1px solid var(--pb-border);
+  background: var(--pb-white-overlay-40);
 }
 
 .settings-title {
-  margin: 0 0 4px;
-  font-size: 20px;
-  font-weight: 500;
+  margin: var(--pb-space-0);
+  font-family: var(--pb-font-display);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .settings-sub {
-  margin: 0;
-  font-size: 12px;
+  margin: var(--pb-space-4) var(--pb-space-0) var(--pb-space-0);
+  max-width: 520px;
+  font-size: 13px;
   color: var(--pb-text-muted);
+  line-height: 1.5;
+}
+
+.settings-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: var(--pb-space-40);
+  overflow-y: auto;
+  padding: var(--pb-space-32);
 }
 
 .load-state {
   display: grid;
   justify-items: center;
-  gap: 8px;
-  padding: 72px 0;
+  align-content: center;
+  gap: var(--pb-space-10);
+  min-height: 100%;
+  padding: var(--pb-space-40) var(--pb-space-18);
   color: var(--pb-text-muted);
 }
 
-.load-state p {
-  margin: 0;
+.state-title,
+.state-copy {
+  margin: var(--pb-space-0);
 }
+
+.state-title { color: var(--pb-text); font-size: 13px; font-weight: 500; }
+.state-copy { color: var(--pb-text-muted); font-size: 12px; text-align: center; }
+.state-retry { margin-top: var(--pb-space-5); border-color: var(--pb-accent); background: var(--pb-accent); color: var(--pb-on-accent); }
+.state-retry:hover:not(:disabled) { border-color: var(--pb-accent-hover); background: var(--pb-accent-hover); }
+
+@media (max-width: 480px) {
+  .settings { height: min(720px, 100vh); }
+  .settings-head { padding: var(--pb-space-22) var(--pb-space-20); }
+  .settings-body { padding: var(--pb-space-22) var(--pb-space-20); gap: var(--pb-space-32); }
+  .settings-title { font-size: 22px; }
+}
+
+@media (max-height: 719px) { .settings { height: 100vh; } }
 </style>

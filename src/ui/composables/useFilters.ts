@@ -21,10 +21,6 @@ export function useFilters(
   const folderId = ref<FolderSelection>('all');
   const tags = ref<string[]>([]);
 
-  const activeFilterCount = computed(
-    () => (folderId.value === 'all' ? 0 : 1) + tags.value.length,
-  );
-
   const visible = computed<Prompt[]>(() => {
     const filter: PromptFilter = {
       query: query.value,
@@ -60,25 +56,12 @@ export function useFilters(
       : [...tags.value, tag];
   }
 
-  function clearTags(): void {
-    tags.value = [];
-  }
-
-  function reset(): void {
-    query.value = '';
-    folderId.value = 'all';
-    tags.value = [];
-  }
-
   return {
     query,
     folderId,
     tags,
-    activeFilterCount,
     visible,
     selectFolder,
     toggleTag,
-    clearTags,
-    reset,
   };
 }
