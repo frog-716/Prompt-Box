@@ -39,7 +39,7 @@ onBeforeUnmount(() => {
     <header class="panel-head">
       <h2 class="panel-title">数据</h2>
       <p class="panel-desc">
-        仅含标题和原文，按最近修改时间排序。
+        含标题、原文、文件夹和标签；按最近修改时间排序。
       </p>
     </header>
 
