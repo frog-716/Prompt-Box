@@ -3,7 +3,7 @@
 ## 结构与依赖
 
 `src/entrypoints/` 挂载扩展入口；`src/ui/` 提供侧边栏与设置页；
-`src/domain/` 保存提示词、文件夹、标签规则及 Markdown 导出格式；
+`src/domain/` 保存提示词、文件夹、标签规则及只含标题和原文的 Markdown 导出格式；
 `src/infra/` 封装 Chrome storage、剪贴板和下载；`src/shared/` 放通用常量。
 依赖只向下流动，架构边界由 `npm run check:arch` 校验。
 
@@ -14,7 +14,7 @@
   让已打开的界面刷新。
 - **分类与筛选**：提示词可选一个文件夹，并带多个标签；两者互不修改，筛选条件可叠加。
 - **复制**：提示词卡片触发 `infra/clipboard.ts`，成功后由 toast 短暂反馈。
-- **导出**：`domain/markdown.ts` 定义 `prompt-box-markdown-v1`；
+- **导出**：`domain/markdown.ts` 按最近修改时间生成标题和原文；
   `infra/markdown-export.ts` 负责下载 `.md` 文件。没有导入流程。
 
 ## 重要入口

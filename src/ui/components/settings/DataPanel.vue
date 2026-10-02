@@ -39,14 +39,16 @@ onBeforeUnmount(() => {
     <header class="panel-head">
       <h2 class="panel-title">数据</h2>
       <p class="panel-desc">
-        prompt-box-markdown-v1（.md）：按修改时间倒序，含标题、分类、标签、时间与原文；空文件夹也会列出。
+        仅含标题和原文，按最近修改时间排序。
       </p>
     </header>
 
     <p class="stat-line">{{ promptCount }} 条提示词 · {{ folderCount }} 个文件夹</p>
 
     <div class="panel-actions">
-      <button type="button" class="primary" @click="emit('export')">导出 Markdown</button>
+      <button type="button" class="primary" :disabled="promptCount === 0" @click="emit('export')">
+        导出 Markdown
+      </button>
       <button
         type="button"
         class="danger"

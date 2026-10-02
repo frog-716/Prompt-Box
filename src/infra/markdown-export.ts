@@ -20,7 +20,7 @@ function dateStamp(now: Date): string {
 /** 触发 Markdown 文件下载。 */
 export function downloadMarkdown(data: PromptBoxData): void {
   const now = new Date();
-  const blob = new Blob([serializeMarkdown(data, now)], { type: 'text/markdown;charset=utf-8' });
+  const blob = new Blob([serializeMarkdown(data)], { type: 'text/markdown;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

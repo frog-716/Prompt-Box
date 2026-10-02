@@ -95,7 +95,7 @@ test('清洗保留标准数组，并拒绝非数字键对象作为集合', () =>
   assert.equal(data.prompts.length, 0);
 });
 
-test('Markdown 导出保留分类清单、倒序和正文围栏', () => {
+test('Markdown 导出只含标题和原文，并按最近修改时间倒序', () => {
   const data = {
     version: 1,
     folders: [
@@ -120,12 +120,11 @@ test('Markdown 导出保留分类清单、倒序和正文围栏', () => {
     ],
   };
 
-  const markdown = serializeMarkdown(data, new Date('2026-10-02T00:00:00.000Z'));
-  assert.match(markdown, /<!-- prompt-box-markdown-v1 -->/);
-  assert.match(markdown, /2026-10-02T00:00:00\.000Z/);
-  assert.match(markdown, /空文件夹：0 条/);
-  assert.match(markdown, /正文末尾换行数：1/);
+  const markdown = serializeMarkdown(data);
   assert.match(markdown, /`````text/);
-  assert.match(markdown, /工作：2 条/);
-  assert.ok(markdown.indexOf('### 较新 \\[版本\\]') < markdown.indexOf('### 较早'));
+  assert.match(markdown, /保留结尾\n`````/);
+  assert.ok(markdown.endsWith('\n'));
+  assert.ok(markdown.indexOf('## 较新 \\[版本\\]') < markdown.indexOf('## 较早'));
+  assert.doesNotMatch(markdown, /文件夹|标签|修改时间|导出时间|空文件夹|prompt-box-markdown/);
+  assert.equal(serializeMarkdown({ ...data, prompts: [] }), '');
 });
