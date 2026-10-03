@@ -62,11 +62,11 @@ let data: PromptBoxData = {
 
 const listeners = new Set<(data: PromptBoxData) => void>();
 const status: StorageStatus = {
-  mode: 'local',
+  mode: 'shared',
   state: 'online',
-  revision: null,
+  revision: 8,
   pending: false,
-  message: '演示预览：修改只保存在此页面内存中',
+  message: '演示预览：同机共享服务在线',
 };
 
 const copy = <T>(value: T): T => structuredClone(value);

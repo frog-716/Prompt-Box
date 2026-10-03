@@ -20,7 +20,6 @@ import PromptEditor from '@/ui/components/PromptEditor.vue';
 import PromptList from '@/ui/components/PromptList.vue';
 import ToastBar from '@/ui/components/ToastBar.vue';
 import SyncStatusBar from '@/ui/components/SyncStatusBar.vue';
-import PairingPanel from '@/ui/components/settings/PairingPanel.vue';
 import { useFilters } from '@/ui/composables/useFilters';
 import { useLibrary } from '@/ui/composables/useLibrary';
 import { useToast } from '@/ui/composables/useToast';
@@ -158,16 +157,16 @@ async function handleExportPending(): Promise<void> {
 
 <template>
   <div class="app">
-    <SyncStatusBar :status="storageStatus" @retry="handleRetrySync" @discard="handleDiscardPending" @export-pending="handleExportPending" />
-    <PairingPanel v-if="storageStatus.mode === 'shared'" @paired="reload" />
+    <SyncStatusBar :status="storageStatus" :settings-link="ready" @open-settings="openSettings" @retry="handleRetrySync" @discard="handleDiscardPending" @export-pending="handleExportPending" />
     <div v-if="!ready" class="load-state" :role="loadError ? 'alert' : 'status'">
       <p class="state-title">{{ loadError ? '暂时无法读取提示词' : '正在打开提示词本…' }}</p>
       <p v-if="loadError" class="state-copy">{{ storageStatus.mode === 'shared'
         ? storageStatus.state === 'unpaired'
-          ? '此设备尚未配对。请在上方生成或输入一次性配对码；配对前不会读取或写入共享数据。'
+          ? '此设备尚未配对。请打开设置页生成或输入一次性配对码；配对前不会读取或写入共享数据。'
           : '无法连接同机共享服务；本次没有报告保存成功。服务恢复后可重新连接。'
         : '本机数据没有被更改。请检查后重试。' }}</p>
-      <button v-if="loadError" type="button" class="state-retry" @click="reload">重新读取</button>
+      <button v-if="loadError && storageStatus.mode === 'shared' && storageStatus.state === 'unpaired'" type="button" class="state-retry" @click="openSettings">打开设置完成配对</button>
+      <button v-else-if="loadError" type="button" class="state-retry" @click="reload">重新读取</button>
     </div>
 
     <PromptEditor
