@@ -1,12 +1,9 @@
 /**
  * 后台服务。
  *
- * 这个扩展的后台刻意做得很薄 —— 只有两件事：
- *   1. 让点击工具栏图标时打开侧边栏；
- *   2. 提供右键「保存到提示词本」。
+ * 这个扩展的后台刻意做得很薄 —— 只负责打开主界面和右键保存。
  *
- * 没有任何网络请求，没有任何定时任务，没有任何网站注入。
- * 侧边栏自己不依赖后台存活，所以 service worker 被回收也不影响使用。
+ * 同机共享构建只向本机回环服务发请求；不会注入网站脚本。
  */
 
 import { browser } from 'wxt/browser';
@@ -54,10 +51,21 @@ async function saveSelection(text: string): Promise<void> {
 }
 
 export default defineBackground(() => {
-  // 点击工具栏图标直接打开侧边栏，不再需要先弹一个空面板。
-  browser.sidePanel
-    .setPanelBehavior({ openPanelOnActionClick: true })
-    .catch((error: unknown) => console.error('[Prompt Box] 侧边栏行为设置失败：', error));
+  const manifest = browser.runtime.getManifest() as { side_panel?: { default_path?: string } };
+  if (manifest.side_panel) {
+    const sidePanel = (browser as unknown as {
+      sidePanel?: { setPanelBehavior: (options: { openPanelOnActionClick: boolean }) => Promise<void> };
+    }).sidePanel;
+    if (sidePanel) {
+      void sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
+        .catch((error: unknown) => console.error('[Prompt Box] 启用 Chrome 侧边栏失败：', error));
+    } else {
+      openLibraryInTab();
+    }
+  } else {
+    // GPT 内置浏览器使用普通扩展标签页，不读取或调用侧边栏 API。
+    openLibraryInTab();
+  }
 
   browser.runtime.onInstalled.addListener(buildContextMenu);
   browser.runtime.onStartup.addListener(buildContextMenu);
@@ -68,3 +76,11 @@ export default defineBackground(() => {
     void saveSelection(info.selectionText);
   });
 });
+
+function openLibraryInTab(): void {
+  browser.action.onClicked.addListener(() => {
+    void browser.tabs
+      .create({ url: browser.runtime.getURL('/library.html') })
+      .catch((error: unknown) => console.error('[Prompt Box] 打开提示词本失败：', error));
+  });
+}

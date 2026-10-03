@@ -1,0 +1,26 @@
+html,
+body,
+#prompt-app {
+  width: 100%;
+  min-width: 360px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--pb-bg);
+}
+
+.showcase-badge {
+  position: fixed;
+  z-index: 10;
+  top: 12px;
+  right: 16px;
+  padding: 6px 10px;
+  border: 1px solid var(--pb-border);
+  border-radius: var(--pb-radius-pill);
+  background: var(--pb-surface);
+  color: var(--pb-text-muted);
+  font: 11px/1.2 var(--pb-font);
+}

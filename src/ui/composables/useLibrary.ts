@@ -12,9 +12,15 @@ import {
   sortFolders, countByFolder, validateFolderName, checkFolderRename,
   type FolderRenameResult,
 } from '@/domain/folder';
+import { restoreBackupIfUnchanged } from '@/domain/backup';
 import { collectTagStats, removeTag, renameTag, sortPrompts, upsertPrompt, type PromptSaveStatus } from '@/domain/prompt';
 import type { Folder, Prompt, PromptBoxData, PromptDraft } from '@/domain/types';
-import { onDataChanged, readData, updateData } from '@/infra/storage';
+import {
+  discardPendingSync, getStorageStatus, onDataChanged, onStorageStatusChanged, readPendingSyncDraft,
+  readData, retryPendingSync, updateData,
+} from '@/infra/storage';
+import { downloadJsonBackup } from '@/infra/json-backup';
+import type { StorageStatus } from '@/infra/sync-storage';
 import { SCHEMA_VERSION } from '@/shared/constants';
 import { createId, timestamp } from '@/shared/utils';
 
@@ -26,7 +32,9 @@ export function useLibrary() {
   const data = ref<PromptBoxData>(emptyData());
   const ready = ref(false);
   const loadError = ref(false);
+  const storageStatus = ref<StorageStatus>(getStorageStatus());
   let unsubscribe: (() => void) | null = null;
+  let unsubscribeStatus: (() => void) | null = null;
   let syncRevision = 0;
 
   const prompts = computed(() => sortPrompts(data.value.prompts));
@@ -130,6 +138,25 @@ export function useLibrary() {
     await commit(() => emptyData());
   }
 
+  async function restoreBackup(expected: PromptBoxData, replacement: PromptBoxData): Promise<void> {
+    await commit((current) => restoreBackupIfUnchanged(current, expected, replacement));
+  }
+
+  async function retryPending(): Promise<void> {
+    await retryPendingSync();
+  }
+
+  async function discardPending(): Promise<void> {
+    await discardPendingSync();
+  }
+
+  async function exportPendingDraft(): Promise<boolean> {
+    const draft = await readPendingSyncDraft();
+    if (!draft) return false;
+    downloadJsonBackup(draft);
+    return true;
+  }
+
   onMounted(() => {
     // 先订阅再读取，避免初始化期间漏掉另一个界面的写入。
     unsubscribe = onDataChanged((incoming) => {
@@ -138,16 +165,22 @@ export function useLibrary() {
       ready.value = true;
       loadError.value = false;
     });
+    unsubscribeStatus = onStorageStatusChanged((status) => {
+      storageStatus.value = status;
+    });
     void load();
   });
 
   onUnmounted(() => {
     unsubscribe?.();
+    unsubscribeStatus?.();
   });
 
   return {
     ready,
     loadError,
+    data,
+    storageStatus,
     prompts,
     allPrompts,
     folders,
@@ -162,6 +195,10 @@ export function useLibrary() {
     renameTagEverywhere,
     removeTagEverywhere,
     clearAll,
+    restoreBackup,
+    retryPending,
+    discardPending,
+    exportPendingDraft,
     reload: load,
   };
 }

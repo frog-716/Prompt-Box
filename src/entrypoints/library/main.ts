@@ -1,4 +1,8 @@
-/** Chrome 侧边栏入口，只负责挂载共享界面。 */
+/**
+ * 主界面标签页入口。
+ *
+ * 只做挂载，不含业务逻辑 —— 所有逻辑都在 ui / composables / domain 里。
+ */
 
 import { createApp } from 'vue';
 
