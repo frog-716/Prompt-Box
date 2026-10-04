@@ -4,9 +4,14 @@
 
 Prompt-Box 是一款中文 Chrome 扩展，围绕提示词的日常积累设计：保存、分类、搜索，最后由你决定复制到哪里使用。
 
-![Prompt-Box 界面预览：温润纸感界面与虚构演示数据](docs/screenshots/prompt-box-showcase.png)
+![Prompt-Box 主列表：温润纸感界面与虚构提示词](docs/screenshots/prompt-box-showcase.png)
 
-> 图片由项目内的演示预览加载同一套 Vue 主界面生成，示例条目是虚构内容；改动只留在临时内存，刷新即重置。它展示的是界面组件，不是扩展管理页或 GPT 内置浏览器截图。
+<p align="center">
+  <img src="docs/screenshots/prompt-box-filters.png" alt="搜索、文件夹和标签组合筛选的界面" width="49%" />
+  <img src="docs/screenshots/prompt-box-editor.png" alt="编辑提示词标题、原文、文件夹和标签的界面" width="49%" />
+</p>
+
+> 三张图都由项目内的隔离预览加载真实 Vue 主界面生成，条目是虚构演示数据。预览只在内存中修改示例内容；截图没有扩展管理页、真实提示词、账号信息或配对码。
 
 ## 为什么做
 
@@ -31,17 +36,15 @@ Prompt-Box 是一款中文 Chrome 扩展，围绕提示词的日常积累设计�
 
 ## 架构
 
-```text
-entrypoints  →  ui  →  infra  →  domain
-                  ↘      ↓        ↙
-                     shared
-```
+![Prompt-Box 两种同机共享试验入口、回环服务和本机数据文件架构图](docs/architecture.svg)
 
-- `domain/`：数据类型与纯业务规则，不依赖浏览器 API、DOM 或 Vue。
-- `infra/`：封装浏览器存储、剪贴板、导出和可选的本机共享服务。
-- `ui/`：Vue 组件和 composables，处理渲染与状态编排。
-- `entrypoints/`：扩展入口，只负责挂载与事件接线。
-- `tools/local-sync/`：只绑定 `127.0.0.1` 的同机共享服务；不面向局域网。
+正式本地构建 `chrome-local` 仍只使用扩展自己的 `chrome.storage.local`，不请求网站访问权限。同机共享是需要用户明确配对的隔离试验构建：Chrome 侧栏版和 GPT 兼容普通标签页版都连接本机回环服务 `127.0.0.1:18763`，共用一份 JSON 数据文件。它没有云端服务，也不会读取或迁移正式本地版数据。
+
+当前 Mac 上另行批准配置了每用户 LaunchAgent：登录时启动，服务进程退出后由 launchd 重启；它使用 Application Support 目录中的独立 Node runtime、服务代码和数据。仓库构建不会安装或启动此配置。服务只监听 `127.0.0.1`，要求用户在扩展界面完成配对；每个扩展使用自己的设备凭据，服务只保存凭据校验值。持久写入前保存完整数据容器快照，自动备份最多保留 20 份。
+
+每个已挂载的共享界面从初次读取开始轮询整份库；一次轮询完成后等待 1.5 秒再开始下一次，单个界面不会叠加轮询。最后一个数据监听器卸载时会清除计时器。当前实现没有根据窗口可见性暂停轮询，因此侧栏被遮住本身不代表轮询已停止。
+
+代码依赖仍按单向分层组织：`entrypoints/` 负责挂载与事件接线，`ui/` 处理 Vue 渲染和状态编排，`infra/` 封装浏览器存储、剪贴板、导出及试验版服务适配，`domain/` 提供纯业务规则，`shared/` 存放通用常量和工具。`domain/` 不依赖浏览器 API、DOM 或 Vue；`tools/local-sync/` 的服务只绑定回环地址。
 
 分层依赖由 `npm run check:arch` 检查。更多数据流与目录说明见 [MAP.md](./MAP.md)，跨工具工程规范见 [AGENTS.md](./AGENTS.md)。
 
@@ -74,7 +77,7 @@ Chrome 侧栏和 GPT 标签页构建分别输出到 `.output/chrome-sync/chrome-
 npm run showcase:screenshot
 ```
 
-脚本使用隔离的临时 Chrome 配置和虚构内存数据，加载项目真实的 `src/ui/sidepanel/App.vue` 组件并生成 `docs/screenshots/prompt-box-showcase.png`。脚本关闭后删除临时浏览器配置；它不会加载、读取或改写用户扩展数据，也不会打开扩展管理页。
+脚本使用隔离的临时 Chrome 配置和虚构内存数据，加载项目真实的 `src/ui/sidepanel/App.vue`，通过界面控件生成主列表、组合筛选和编辑三张 2× 演示截图。脚本关闭后删除临时浏览器配置；它不会加载、读取或改写用户扩展数据，也不会打开扩展管理页。
 
 ## 数据与边界
 

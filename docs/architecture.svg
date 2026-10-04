@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1050" role="img" aria-labelledby="title description">
+  <title id="title">Prompt-Box 同机共享试验架构</title>
+  <desc id="description">Chrome 侧栏构建和 GPT 兼容普通标签页构建经过用户配对后连接只监听本机回环地址的 Node 服务。服务把一份 JSON 文件作为数据源，每次持久写入前先保存备份；正式本地构建独立使用 chrome.storage.local。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M1 1 11 6 1 11Z" fill="#9B5E49" />
+    </marker>
+    <marker id="arrow-start" markerWidth="12" markerHeight="12" refX="2" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M11 1 1 6 11 11Z" fill="#9B5E49" />
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="9" flood-color="#60442F" flood-opacity=".08" />
+    </filter>
+    <style>
+      .sans { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", sans-serif; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .title { font-size: 34px; font-weight: 650; fill: #382E2B; }
+      .subtitle { font-size: 17px; fill: #7D6C62; }
+      .section { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; fill: #9B5E49; }
+      .card-title { font-size: 19px; font-weight: 650; fill: #382E2B; }
+      .body { font-size: 15px; fill: #625750; }
+      .small { font-size: 13px; fill: #7D6C62; }
+      .code { font-size: 14px; fill: #543C34; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1050" rx="28" fill="#F7F3EC" />
+  <circle cx="1465" cy="74" r="110" fill="#EBDDCD" opacity=".42" />
+  <circle cx="1520" cy="120" r="54" fill="#D9E1D2" opacity=".5" />
+
+  <g class="sans">
+    <text x="72" y="76" class="section">PROMPT-BOX · 本机优先</text>
+    <text x="72" y="126" class="title">两个入口，一份同机数据</text>
+    <text x="72" y="160" class="subtitle">共享试验版的请求、进程托管与落盘路径</text>
+
+    <text x="72" y="218" class="section">扩展界面</text>
+    <rect x="70" y="238" width="470" height="420" rx="22" fill="#FFFCF7" stroke="#E6DCCF" filter="url(#shadow)" />
+
+    <rect x="96" y="272" width="418" height="130" rx="16" fill="#F7EEE4" stroke="#E8D7C7" />
+    <circle cx="126" cy="310" r="12" fill="#D88061" />
+    <text x="151" y="316" class="card-title">Chrome 侧栏版</text>
+    <text x="126" y="348" class="small mono">chrome-sync</text>
+    <text x="126" y="376" class="body">在 Chrome 侧栏中查看与编辑</text>
+
+    <rect x="96" y="420" width="418" height="130" rx="16" fill="#F2F0E8" stroke="#DFDDD2" />
+    <circle cx="126" cy="458" r="12" fill="#899A7A" />
+    <text x="151" y="464" class="card-title">GPT 兼容构建</text>
+    <text x="126" y="496" class="small mono">gpt-sync · 普通扩展标签页</text>
+    <text x="126" y="524" class="body">不使用 sidePanel API，也不注入网页</text>
+
+    <rect x="96" y="570" width="418" height="62" rx="14" fill="#FFF8EE" stroke="#EADBC8" />
+    <text x="118" y="596" class="body">用户在扩展界面配对后使用</text>
+    <text x="118" y="618" class="small">每个构建有独立设备凭据；服务只存校验值</text>
+
+    <text x="595" y="406" class="small" text-anchor="middle">HTTP · 读写</text>
+    <path d="M540 438H650" fill="none" stroke="#9B5E49" stroke-width="3" marker-start="url(#arrow-start)" marker-end="url(#arrow)" />
+
+    <text x="650" y="218" class="section">回环服务</text>
+    <rect x="650" y="238" width="420" height="420" rx="22" fill="#FFFCF7" stroke="#E6DCCF" filter="url(#shadow)" />
+    <rect x="680" y="270" width="360" height="54" rx="14" fill="#EAEFE3" />
+    <text x="860" y="305" class="card-title" text-anchor="middle">Node 服务</text>
+    <text x="860" y="354" class="code mono" text-anchor="middle">127.0.0.1:18763</text>
+    <line x1="700" y1="378" x2="1020" y2="378" stroke="#E8DED2" />
+    <text x="700" y="416" class="body">• 校验配对设备凭据</text>
+    <text x="700" y="450" class="body">• 按版本串行处理写入</text>
+    <text x="700" y="484" class="body">• 返回整份共享库状态</text>
+    <rect x="680" y="518" width="360" height="104" rx="14" fill="#F8F1E8" />
+    <text x="702" y="550" class="body">每次请求结束后等待 1.5 秒再轮询</text>
+    <text x="702" y="577" class="small">单个界面不重叠请求；最后一个监听器卸载</text>
+    <text x="702" y="600" class="small">时清除计时器。隐藏侧栏本身不会暂停轮询。</text>
+
+    <text x="1130" y="280" class="small" text-anchor="middle">读写</text>
+    <path d="M1070 438H1180" fill="none" stroke="#9B5E49" stroke-width="3" marker-start="url(#arrow-start)" marker-end="url(#arrow)" />
+
+    <text x="1180" y="218" class="section">稳定数据源</text>
+    <rect x="1180" y="238" width="350" height="420" rx="22" fill="#FFFCF7" stroke="#E6DCCF" filter="url(#shadow)" />
+    <path d="M1222 287h56l13 15h165a12 12 0 0 1 12 12v108a12 12 0 0 1-12 12h-234a12 12 0 0 1-12-12V299a12 12 0 0 1 12-12Z" fill="#F4EADF" stroke="#DFCDBB" stroke-width="2" />
+    <text x="1300" y="347" class="small" text-anchor="middle">唯一共享 JSON 文件</text>
+    <text x="1300" y="380" class="code mono" text-anchor="middle">Data/library.json</text>
+    <text x="1208" y="468" class="body">每次持久写入：</text>
+    <text x="1208" y="502" class="body">1. 先保存完整旧容器快照</text>
+    <text x="1208" y="536" class="body">2. 原子写入新的 JSON 容器</text>
+    <rect x="1208" y="568" width="294" height="54" rx="13" fill="#EAEFE3" />
+    <text x="1355" y="591" class="small mono" text-anchor="middle">Data/Backups/</text>
+    <text x="1355" y="611" class="small" text-anchor="middle">最多保留 20 份有效快照</text>
+
+    <path d="M860 720V668" fill="none" stroke="#9B5E49" stroke-width="2.5" marker-end="url(#arrow)" />
+    <rect x="650" y="720" width="420" height="145" rx="20" fill="#F2F0E8" stroke="#DFDDD2" />
+    <text x="682" y="758" class="card-title">当前 Mac：每用户 LaunchAgent</text>
+    <text x="682" y="791" class="body">登录时启动；进程退出后自动重启</text>
+    <text x="682" y="820" class="small">私有 Node runtime 与 Service、Data 分开保存</text>
+    <text x="682" y="844" class="small">仓库构建不会自动安装或启动 LaunchAgent</text>
+
+    <rect x="70" y="720" width="470" height="145" rx="20" fill="#F8EFEA" stroke="#E9D4C9" />
+    <text x="102" y="758" class="section">独立的正式本地构建</text>
+    <text x="102" y="797" class="card-title">chrome-local → chrome.storage.local</text>
+    <text x="102" y="830" class="small">不请求网站访问权限，不连接上方共享服务</text>
+
+    <rect x="70" y="906" width="1460" height="82" rx="20" fill="#3F3530" />
+    <text x="102" y="941" font-size="15" font-weight="650" fill="#FFF8EF">边界</text>
+    <text x="102" y="969" font-size="14" fill="#E9DDD0">共享试验版只访问回环地址；没有云同步、网页注入或自动填表。同一操作系统用户下的恶意本机进程不在信任范围内。</text>
+  </g>
+</svg>
