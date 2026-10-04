@@ -6,12 +6,11 @@ Prompt-Box 是一款中文 Chrome 扩展，围绕提示词的日常积累设计�
 
 ![Prompt-Box 主列表：温润纸感界面与虚构提示词](docs/screenshots/prompt-box-showcase.png)
 
-<p align="center">
-  <img src="docs/screenshots/prompt-box-filters.png" alt="搜索、文件夹和标签组合筛选的界面" width="49%" />
-  <img src="docs/screenshots/prompt-box-editor.png" alt="编辑提示词标题、原文、文件夹和标签的界面" width="49%" />
-</p>
+![Prompt-Box 搜索、文件夹和标签组合筛选界面](docs/screenshots/prompt-box-filters.png)
 
-> 三张图都由项目内的隔离预览加载真实 Vue 主界面生成，条目是虚构演示数据。预览只在内存中修改示例内容；截图没有扩展管理页、真实提示词、账号信息或配对码。
+![Prompt-Box 编辑标题、原文、文件夹和标签的界面](docs/screenshots/prompt-box-editor.png)
+
+> 三张图都由项目内的隔离预览加载真实 Vue 主界面生成，条目是虚构演示数据。预览只在内存中修改示例内容；图外的浅边框、圆角和阴影是展示装饰，不改实际界面。窄屏查看时可点图打开原尺寸。截图没有扩展管理页、真实提示词、账号信息或配对码。
 
 ## 为什么做
 

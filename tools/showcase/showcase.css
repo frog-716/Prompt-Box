@@ -7,6 +7,24 @@ body,
   margin: 0;
 }
 
+#prompt-app {
+  box-sizing: border-box;
+  width: calc(100% - var(--pb-space-28));
+  height: calc(100vh - var(--pb-space-28));
+  min-height: 0;
+  margin: var(--pb-space-14) auto;
+  overflow: hidden;
+  border: var(--pb-space-1) solid var(--pb-border);
+  border-radius: var(--pb-radius-8);
+  background: var(--pb-bg);
+  box-shadow: var(--pb-shadow-raised);
+}
+
+#prompt-app > .app {
+  height: 100%;
+  border-radius: inherit;
+}
+
 body {
   min-height: 100vh;
   background: var(--pb-bg);

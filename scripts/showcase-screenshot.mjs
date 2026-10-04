@@ -9,7 +9,7 @@ const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const chrome = process.env.CHROME_BIN ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const screenshots = [
   { name: 'prompt-box-showcase.png', scenario: '', height: 820 },
-  { name: 'prompt-box-filters.png', scenario: 'filters', height: 400 },
+  { name: 'prompt-box-filters.png', scenario: 'filters', height: 360 },
   { name: 'prompt-box-editor.png', scenario: 'editor', height: 840 },
 ];
 
@@ -44,7 +44,7 @@ try {
       '--no-default-browser-check',
       '--force-device-scale-factor=2',
       `--user-data-dir=${profile}`,
-      `--window-size=1080,${screenshot.height}`,
+      `--window-size=1108,${screenshot.height + 28}`,
       '--hide-scrollbars',
       `--screenshot=${output}`,
       '--virtual-time-budget=5000',
