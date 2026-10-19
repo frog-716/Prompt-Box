@@ -6,7 +6,7 @@
  * 所以真正必填的只有内容 —— 记录一条提示词不该被表单挡住。
  */
 
-import { nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 
 import type { Folder, Prompt, PromptDraft } from '@/domain/types';
 import { deriveTitle } from '@/shared/utils';
@@ -34,6 +34,7 @@ const folderId = ref<string | null>(null);
 const tags = ref<string[]>([]);
 const error = ref('');
 const contentEl = ref<HTMLTextAreaElement | null>(null);
+const confirmingDiscard = ref(false);
 
 function reset(): void {
   const source = props.prompt;
@@ -42,7 +43,23 @@ function reset(): void {
   folderId.value = source?.folderId ?? null;
   tags.value = source ? [...source.tags] : [];
   error.value = '';
+  confirmingDiscard.value = false;
 }
+
+/** 表单相对初始状态有没有改动——决定「退出」要不要先问一句。 */
+const dirty = computed(() => {
+  const source = props.prompt;
+  if (!source) {
+    return title.value.trim() !== '' || content.value !== '' || folderId.value !== null || tags.value.length > 0;
+  }
+  return (
+    title.value.trim() !== source.title ||
+    content.value !== source.content ||
+    folderId.value !== source.folderId ||
+    tags.value.length !== source.tags.length ||
+    tags.value.some((tag, index) => tag !== source.tags[index])
+  );
+});
 
 watch(
   () => props.prompt,
@@ -78,18 +95,42 @@ function submit(asNew = false): void {
   else emit('save', draft);
 }
 
-function onKeydown(event: KeyboardEvent): void {
-  if (!props.saving && event.key === 'Escape') {
-    event.preventDefault();
+/**
+ * 退出编辑器。没有改动就直接走；有改动先内联问一句
+ * （与卡片删除确认同款模式，不弹窗），避免误触丢草稿。
+ */
+function requestCancel(): void {
+  if (props.saving) return;
+  if (!dirty.value) {
     emit('cancel');
+    return;
   }
+  confirmingDiscard.value = true;
+}
+
+function confirmDiscard(): void {
+  confirmingDiscard.value = false;
+  emit('cancel');
+}
+
+function resumeEditing(): void {
+  confirmingDiscard.value = false;
+  contentEl.value?.focus();
+}
+
+function onKeydown(event: KeyboardEvent): void {
+  if (props.saving) return;
+  if (event.key !== 'Escape') return;
+  event.preventDefault();
+  if (confirmingDiscard.value) resumeEditing();
+  else requestCancel();
 }
 </script>
 
 <template>
   <form class="editor" @submit.prevent="submit()" @keydown="onKeydown">
     <div class="editor-head">
-      <button type="button" class="editor-back" aria-label="返回列表" :disabled="saving" @click="emit('cancel')">
+      <button type="button" class="editor-back" aria-label="返回列表" :disabled="saving" @click="requestCancel()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
       </button>
       <h2 class="editor-title">{{ prompt ? '编辑提示词' : '新建提示词' }}</h2>
@@ -136,11 +177,18 @@ function onKeydown(event: KeyboardEvent): void {
     </div>
 
     <div class="editor-actions">
-      <button type="button" :disabled="saving" @click="emit('cancel')">取消</button>
-      <button v-if="allowSaveAsNew" type="button" :disabled="saving" @click="submit(true)">另存为新提示词</button>
-      <button type="submit" class="primary" :disabled="saving">
-        {{ saving ? '保存中…' : '保存' }}
-      </button>
+      <template v-if="!confirmingDiscard">
+        <button type="button" :disabled="saving" @click="requestCancel()">取消</button>
+        <button v-if="allowSaveAsNew" type="button" :disabled="saving" @click="submit(true)">另存为新提示词</button>
+        <button type="submit" class="primary" :disabled="saving">
+          {{ saving ? '保存中…' : '保存' }}
+        </button>
+      </template>
+      <div v-else class="discard-confirm" role="alert">
+        <span class="discard-text">有未保存的更改，放弃吗？</span>
+        <button type="button" class="discard-no" @click="resumeEditing()">继续编辑</button>
+        <button type="button" class="discard-yes" @click="confirmDiscard()">放弃更改</button>
+      </div>
     </div>
   </form>
 </template>
@@ -304,6 +352,24 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 .editor-actions button:not(.primary):hover:not(:disabled) { background: var(--pb-black-overlay-5); }
+
+/* 放弃草稿前的内联确认（与卡片删除确认同款模式：不弹窗） */
+.discard-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pb-space-8);
+  width: 100%;
+  font-size: 12px;
+  color: var(--pb-danger);
+}
+
+.discard-confirm button { min-width: 74px; }
+.discard-confirm .discard-no { border-color: transparent; background: transparent; color: var(--pb-text-soft); }
+.discard-confirm .discard-no:hover:not(:disabled) { background: var(--pb-black-overlay-5); color: var(--pb-text); }
+.discard-confirm .discard-yes { background: var(--pb-danger-button); border-color: var(--pb-danger-button); color: var(--pb-white); border-radius: var(--pb-radius-3); }
+.discard-confirm .discard-yes:hover:not(:disabled) { background: var(--pb-danger); border-color: var(--pb-danger); }
 
 @media (max-width: 340px) {
   .editor-body, .editor-head, .editor-actions { padding-inline: var(--pb-space-12); }

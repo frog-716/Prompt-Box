@@ -54,7 +54,11 @@
 
 ## 5. 遗留事项
 
+- ~~编辑态「Escape 丢草稿」（诊断报告 P0-4）~~ **已解决（19:20）**：`PromptEditor.vue`
+  新增 `dirty` 计算 + `confirmingDiscard` 内联确认。Escape / 取消 / 返回三条退出路径
+  统一走 `requestCancel()`：无改动直接退出；有未保存更改时底部显示
+  「有未保存的更改，放弃吗？［继续编辑］［放弃更改］」（与卡片删除确认同款模式，不弹窗），
+  确认中再按 Escape = 继续编辑。验证：verify/test/build 全绿，
+  新增实拍图 `shots/sidepanel-360-editor-escape-confirm.png`（草稿保留 + 确认条出现）。
 - `html/` 原型页保留作标注脚手架（含 `--pb-radius-6` 的历史说明文字），
   不进入生产；如不再需要可整体删除。
-- 编辑态「Escape 丢草稿」（诊断报告 P0-4）本轮未处理，属交互逻辑问题，
-  与本次「装载替换」范围分开，待用户确认后单独修。
