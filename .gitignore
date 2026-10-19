@@ -7,3 +7,15 @@ stats.html
 .DS_Store
 .env
 .env.*
+
+# 运营内容草稿（未公开的小红书帖子，不进公开仓库）
+docs/social/
+
+# 个人数据防护：提示词库导出 / 快照 / 迁移基线，绝不入库
+library.json
+library-*.json
+MigrationBackup/
+*.promptbox-backup.json
+
+# 代理工作区（含个人工作记忆，勿入公开仓库）
+.workbuddy/
