@@ -195,32 +195,32 @@ async function handleRemove(prompt: Prompt): Promise<void> {
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: var(--pb-space-9);
+  gap: var(--pb-space-8);
   flex: 1;
-  padding: var(--pb-space-28) var(--pb-space-22);
+  padding: var(--pb-space-32) var(--pb-space-24);
   text-align: center;
   color: var(--pb-text-muted);
 }
 
 .state-title,
 .state-copy {
-  margin: var(--pb-space-0);
+  margin: 0;
 }
 
 .state-title {
   color: var(--pb-text);
-  font-size: 13px;
+  font-size: var(--pb-text-md);
   font-weight: 500;
 }
 
 .state-copy {
   max-width: 240px;
   color: var(--pb-text-muted);
-  font-size: 12px;
+  font-size: var(--pb-text-sm);
 }
 
 .state-retry {
-  margin-top: var(--pb-space-5);
+  margin-top: var(--pb-space-4);
   border-color: var(--pb-accent);
   background: var(--pb-accent);
   color: var(--pb-on-accent);

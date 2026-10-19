@@ -1,96 +1,81 @@
 /**
  * Gemini A「温润纸感」原型的全局设计令牌。
+ *
+ * 2026-10-20 令牌治理（UI 评审 P1-2 / P1-3）：
+ * - 间距收敛为 px/4/8/12/16/24/32 七档阶梯（原 24 档近像素级变量），0 以内联值使用
+ * - 危险色收敛为 text/border/surface/button 四个语义层（原 14 个变体）
+ * - 圆角合并同值：--pb-radius-sm（6px）并入 --pb-radius（6px）
+ * - 新增字号四档 xs/sm/md/lg，替代组件内 10–18px 字面量
+ * - 删除零引用令牌；一次性令牌已内联为具体值到使用处
  */
 
 :root {
   color-scheme: light;
 
+  /* 纸面与文字（品牌资产，不随治理调整） */
   --pb-bg: #f9f8f6;
   --pb-surface: #fffdfc;
   --pb-surface-hover: #e8e3de;
   --pb-surface-soft: #f0ebe6;
-  --pb-surface-translucent: rgb(255 253 252 / 30%);
   --pb-border: #e8e3de;
   --pb-border-strong: #d7d0ca;
+  --pb-border-card: rgb(232 227 222 / 50%);
   --pb-text: #2c2a29;
   --pb-text-muted: #8a847f;
   --pb-text-faint: #a49d97;
-  --pb-chip-text: #7a746f;
   --pb-text-soft: #6b625e;
   --pb-text-strong-muted: #5c5652;
-  --pb-text-date: #9a928c;
+  --pb-white: #ffffff;
+
+  /* 强调色（品牌资产） */
   --pb-accent: #c77560;
   --pb-accent-hover: #b36854;
   --pb-accent-weak: #f0ebe6;
   --pb-on-accent: #ffffff;
   --pb-accent-ring: rgb(199 117 96 / 20%);
+
+  /* 危险色：text/border/surface/button 四个语义层 */
   --pb-danger: #b85b50;
   --pb-danger-text: #a84940;
-  --pb-danger-text-strong: #c45f55;
-  --pb-danger-text-soft: #d47a70;
-  --pb-danger-hover: #a9473d;
+  --pb-danger-border: #eac7c3;
+  --pb-danger-surface: #fff3f1;
+  --pb-danger-surface-hover: #fff5f4;
   --pb-danger-button: #c75f50;
   --pb-danger-button-hover: #b94c42;
-  --pb-danger-border: #eac7c3;
-  --pb-danger-border-strong: #f2c7c1;
-  --pb-danger-border-soft: #f4d5cf;
-  --pb-danger-surface: #fff3f1;
-  --pb-danger-surface-soft: #fff2f0;
-  --pb-danger-surface-hover: #fff5f4;
-  --pb-danger-surface-subtle: #fff1ef;
-  --pb-surface-subtle: #f7f5f3;
-  --pb-edit-underline: #8cb7da;
-  --pb-info-border: #dbe6f0;
-  --pb-info-bg: rgb(239 246 255 / 55%);
-  --pb-info-text: #355977;
-  --pb-white: #ffffff;
-  --pb-border-card: rgb(232 227 222 / 50%);
-  --pb-black-overlay-4: rgb(0 0 0 / 4%);
-  --pb-black-overlay-5: rgb(0 0 0 / 5%);
-  --pb-black-overlay-12: rgb(0 0 0 / 12%);
-  --pb-paper-overlay-20: rgb(255 253 252 / 20%);
-  --pb-paper-overlay-80: rgb(255 253 252 / 80%);
-  --pb-white-overlay-40: rgb(255 255 255 / 40%);
-  --pb-white-overlay-50: rgb(255 255 255 / 50%);
-  --pb-white-overlay-60: rgb(255 255 255 / 60%);
-  --pb-white-overlay-80: rgb(255 255 255 / 80%);
+
+  /* 阴影 */
   --pb-shadow-card: 0 1px 2px rgb(0 0 0 / 5%);
   --pb-shadow-raised: 0 4px 6px rgb(0 0 0 / 10%);
 
-  --pb-radius-none: 0;
+  /* 黑色叠层（低频工具值，各 2 处使用） */
+  --pb-black-overlay-4: rgb(0 0 0 / 4%);
+  --pb-black-overlay-5: rgb(0 0 0 / 5%);
+
+  /* 圆角（默认 6px，小按钮 4px，胶囊 999px） */
+  --pb-radius: 6px;
   --pb-radius-3: 3px;
   --pb-radius-4: 4px;
   --pb-radius-5: 5px;
   --pb-radius-8: 8px;
   --pb-radius-pill: 999px;
-  --pb-radius-sm: 6px;
-  --pb-radius: 6px;
+  --pb-radius-none: 0;
 
-  --pb-space-0: 0;
-  --pb-space-1: 1px;
-  --pb-space-2: 2px;
-  --pb-space-3: 3px;
+  /* 间距：七档阶梯 */
+  --pb-space-px: 1px;
   --pb-space-4: 4px;
-  --pb-space-5: 5px;
-  --pb-space-6: 6px;
-  --pb-space-7: 7px;
   --pb-space-8: 8px;
-  --pb-space-9: 9px;
-  --pb-space-10: 10px;
   --pb-space-12: 12px;
-  --pb-space-14: 14px;
   --pb-space-16: 16px;
-  --pb-space-18: 18px;
-  --pb-space-20: 20px;
-  --pb-space-22: 22px;
   --pb-space-24: 24px;
-  --pb-space-28: 28px;
-  --pb-space-30: 30px;
   --pb-space-32: 32px;
-  --pb-space-36: 36px;
-  --pb-space-40: 40px;
-  --pb-space-44: 44px;
 
+  /* 字号：xs 辅助 / sm 次要正文 / md 正文 / lg 标题 */
+  --pb-text-xs: 11px;
+  --pb-text-sm: 12px;
+  --pb-text-md: 13px;
+  --pb-text-lg: 16px;
+
+  /* 字体 */
   --pb-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --pb-font-display: Georgia, 'Songti SC', 'Noto Serif CJK SC', serif;
@@ -104,15 +89,15 @@ html,
 body,
 #app {
   min-height: 100%;
-  margin: var(--pb-space-0);
-  padding: var(--pb-space-0);
+  margin: 0;
+  padding: 0;
 }
 
 body {
   background: var(--pb-bg);
   color: var(--pb-text);
   font-family: var(--pb-font);
-  font-size: 13px;
+  font-size: var(--pb-text-md);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
@@ -120,8 +105,8 @@ body {
 button {
   min-height: 30px;
   border: 1px solid var(--pb-border);
-  border-radius: var(--pb-radius-sm);
-  padding: var(--pb-space-4) var(--pb-space-10);
+  border-radius: var(--pb-radius);
+  padding: var(--pb-space-4) var(--pb-space-12);
   background: var(--pb-surface);
   color: inherit;
   font: inherit;
@@ -157,8 +142,8 @@ textarea,
 select {
   width: 100%;
   border: 1px solid var(--pb-border);
-  border-radius: var(--pb-radius-sm);
-  padding: var(--pb-space-7) var(--pb-space-10);
+  border-radius: var(--pb-radius);
+  padding: var(--pb-space-8) var(--pb-space-12);
   background: var(--pb-surface);
   color: var(--pb-text);
   font: inherit;

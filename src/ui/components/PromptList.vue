@@ -58,14 +58,14 @@ const emit = defineEmits<{
   align-content: center;
   gap: var(--pb-space-12);
   min-height: 100%;
-  padding: var(--pb-space-22) var(--pb-space-14);
+  padding: var(--pb-space-24) var(--pb-space-16);
   color: var(--pb-text-muted);
   text-align: center;
 }
 
 .empty-state p {
-  margin: var(--pb-space-0);
-  font-size: 13px;
+  margin: 0;
+  font-size: var(--pb-text-md);
 }
 
 .empty-icon {

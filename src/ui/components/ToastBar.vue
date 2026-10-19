@@ -34,7 +34,7 @@ defineProps<{
   gap: var(--pb-space-8);
   padding: var(--pb-space-8) var(--pb-space-16);
   border-radius: var(--pb-radius);
-  font-size: 13px;
+  font-size: var(--pb-text-md);
   background: var(--pb-text);
   color: var(--pb-white);
   pointer-events: none;

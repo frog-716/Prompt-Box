@@ -134,13 +134,13 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .section { display: flex; flex-direction: column; gap: var(--pb-space-16); }
-.section-title { display: flex; align-items: center; gap: var(--pb-space-8); margin: var(--pb-space-0); font-family: var(--pb-font-display); font-size: 18px; font-weight: 500; }
+.section-title { display: flex; align-items: center; gap: var(--pb-space-8); margin: 0; font-family: var(--pb-font-display); font-size: var(--pb-text-lg); font-weight: 500; }
 .section-title svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
 .panel {
   border: 1px solid var(--pb-border-card);
   border-radius: var(--pb-radius);
-  padding: var(--pb-space-20);
+  padding: var(--pb-space-24);
   background: var(--pb-surface);
   box-shadow: var(--pb-shadow-card);
 }
@@ -151,7 +151,7 @@ onBeforeUnmount(() => {
   margin-bottom: var(--pb-space-24);
 }
 
-.add-row input { width: 100%; max-width: 360px; min-width: 0; padding: var(--pb-space-7) var(--pb-space-12); font-size: 12px; }
+.add-row input { width: 100%; max-width: 360px; min-width: 0; padding: var(--pb-space-8) var(--pb-space-12); font-size: var(--pb-text-sm); }
 
 /* 「新增」用 + 图标表达，不用文字 */
 .add-button {
@@ -171,8 +171,8 @@ onBeforeUnmount(() => {
 
 .list {
   list-style: none;
-  margin: var(--pb-space-0);
-  padding: var(--pb-space-0);
+  margin: 0;
+  padding: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--pb-space-12);
@@ -201,29 +201,29 @@ onBeforeUnmount(() => {
   flex: 1;
   gap: var(--pb-space-12);
   border: 0;
-  padding: var(--pb-space-0);
+  padding: 0;
   background: transparent;
   text-align: left;
 }
 
 .folder-main:hover:not(:disabled) { background: transparent; }
 .folder-icon { width: 16px; height: 16px; flex: 0 0 16px; fill: none; stroke: var(--pb-text-muted); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.folder-copy { display: flex; min-width: 0; flex-direction: column; gap: var(--pb-space-2); }
+.folder-copy { display: flex; min-width: 0; flex-direction: column; gap: var(--pb-space-4); }
 
 .row-input {
   width: 100%;
   min-width: 0;
   border: 0;
-  border-bottom: 2px solid var(--pb-edit-underline);
+  border-bottom: 2px solid #8cb7da;
   border-radius: var(--pb-radius-none);
-  padding: var(--pb-space-3) var(--pb-space-0);
+  padding: var(--pb-space-4) 0;
   background: transparent;
-  font-size: 13px;
+  font-size: var(--pb-text-md);
   outline: none;
 }
 
 .row-name {
-  font-size: 12px;
+  font-size: var(--pb-text-sm);
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -231,7 +231,7 @@ onBeforeUnmount(() => {
 }
 
 .row-count {
-  font-size: 10px;
+  font-size: var(--pb-text-xs);
   color: var(--pb-text-muted);
   flex-shrink: 0;
 }
@@ -244,14 +244,14 @@ onBeforeUnmount(() => {
   min-height: 25px;
   border: 0;
   padding: var(--pb-space-4);
-  background: var(--pb-surface-subtle);
+  background: #f7f5f3;
   color: var(--pb-text-muted);
   opacity: 0;
   transition: opacity .14s ease, color .14s ease;
 }
 
 .row:hover .remove-button, .remove-button:focus-visible { opacity: 1; }
-.remove-button:hover:not(:disabled) { background: var(--pb-danger-surface-subtle); color: var(--pb-danger-text-strong); }
+.remove-button:hover:not(:disabled) { background: var(--pb-danger-surface); color: var(--pb-danger-text); }
 .remove-button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
 .delete-confirm {
@@ -261,18 +261,18 @@ onBeforeUnmount(() => {
   top: 8px;
   display: flex;
   align-items: center;
-  gap: var(--pb-space-7);
-  padding: var(--pb-space-6) var(--pb-space-8);
-  border: 1px solid var(--pb-danger-border-soft);
+  gap: var(--pb-space-8);
+  padding: var(--pb-space-8) var(--pb-space-8);
+  border: 1px solid var(--pb-danger-border);
   border-radius: var(--pb-radius-4);
   background: var(--pb-danger-surface);
   color: var(--pb-danger);
   box-shadow: var(--pb-shadow-card);
-  font-size: 10px;
+  font-size: var(--pb-text-xs);
 }
 
-.delete-confirm button { min-height: 22px; border: 0; padding: var(--pb-space-2) var(--pb-space-4); background: transparent; color: var(--pb-text-muted); font-size: 10px; }
-.delete-confirm .confirm-delete { color: var(--pb-danger-text-strong); font-weight: 600; }
+.delete-confirm button { min-height: 22px; border: 0; padding: var(--pb-space-4) var(--pb-space-4); background: transparent; color: var(--pb-text-muted); font-size: var(--pb-text-xs); }
+.delete-confirm .confirm-delete { color: var(--pb-danger-text); font-weight: 600; }
 
 @media (max-width: 480px) {
   .panel { padding: var(--pb-space-16); }

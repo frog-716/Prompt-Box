@@ -83,7 +83,7 @@ const emit = defineEmits<{
   gap: var(--pb-space-12);
   padding: var(--pb-space-12) var(--pb-space-16);
   border-bottom: 1px solid var(--pb-border);
-  background: var(--pb-paper-overlay-20);
+  background: rgb(255 253 252 / 20%);
 }
 
 .search-wrap { position: relative; flex: 1 1 160px; min-width: 0; }
@@ -106,10 +106,10 @@ const emit = defineEmits<{
 
 .search-input {
   min-height: 34px;
-  padding: var(--pb-space-6) var(--pb-space-12) var(--pb-space-6) var(--pb-space-36);
+  padding: var(--pb-space-8) var(--pb-space-12) var(--pb-space-8) var(--pb-space-32);
   border-radius: var(--pb-radius);
-  font-size: 13px;
-  background: var(--pb-white-overlay-60);
+  font-size: var(--pb-text-md);
+  background: rgb(255 255 255 / 60%);
 }
 
 .header-icon-btn {
@@ -156,9 +156,9 @@ const emit = defineEmits<{
   max-width: 100%;
   min-height: auto;
   border: 0;
-  padding: var(--pb-space-0);
+  padding: 0;
   background: transparent;
-  font-size: 12px;
+  font-size: var(--pb-text-sm);
   color: var(--pb-text);
   cursor: pointer;
 }
@@ -168,7 +168,7 @@ const emit = defineEmits<{
 .tag-row {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--pb-space-6);
+  gap: var(--pb-space-8);
   flex: 1 1 auto;
 }
 
@@ -176,9 +176,9 @@ const emit = defineEmits<{
   min-height: 23px;
   border: 0;
   border-radius: var(--pb-radius);
-  padding: var(--pb-space-1) var(--pb-space-8);
-  font-size: 12px;
-  color: var(--pb-chip-text);
+  padding: var(--pb-space-px) var(--pb-space-8);
+  font-size: var(--pb-text-sm);
+  color: #7a746f;
   background: var(--pb-surface-soft);
 }
 

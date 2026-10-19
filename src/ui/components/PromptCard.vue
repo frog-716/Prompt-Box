@@ -134,14 +134,14 @@ onBeforeUnmount(() => {
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--pb-space-8);
-  margin-bottom: var(--pb-space-6);
-  padding-right: var(--pb-space-44);
+  margin-bottom: var(--pb-space-8);
+  padding-right: 44px; /* 为右上角浮动操作按钮留位，不随间距阶梯缩放 */
 }
 
 .card-title {
-  margin: var(--pb-space-0);
+  margin: 0;
   font-family: var(--pb-font-display);
-  font-size: 14px;
+  font-size: var(--pb-text-lg);
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -149,8 +149,8 @@ onBeforeUnmount(() => {
 }
 
 .card-preview {
-  margin: var(--pb-space-0) var(--pb-space-0) var(--pb-space-10);
-  font-size: 12px;
+  margin: 0 0 var(--pb-space-12);
+  font-size: var(--pb-text-sm);
   color: var(--pb-text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -162,24 +162,24 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: var(--pb-space-8);
-  margin-top: var(--pb-space-0);
+  margin-top: 0;
   min-height: 18px;
 }
 
 .card-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--pb-space-6);
+  gap: var(--pb-space-8);
   min-width: 0;
   overflow: hidden;
 }
 
 .card-tag {
-  font-size: 11px;
+  font-size: var(--pb-text-xs);
   color: var(--pb-text-muted);
   background: var(--pb-black-overlay-4);
   border-radius: var(--pb-radius-4);
-  padding: var(--pb-space-2) var(--pb-space-6);
+  padding: var(--pb-space-4) var(--pb-space-8);
   white-space: nowrap;
 }
 
@@ -187,11 +187,11 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: var(--pb-space-4);
-  font-size: 11px;
+  font-size: var(--pb-text-xs);
   color: var(--pb-text-muted);
   background: var(--pb-black-overlay-4);
   border-radius: var(--pb-radius-4);
-  padding: var(--pb-space-2) var(--pb-space-6);
+  padding: var(--pb-space-4) var(--pb-space-8);
   white-space: nowrap;
 }
 
@@ -212,9 +212,9 @@ onBeforeUnmount(() => {
   right: 8px;
   display: flex;
   align-items: center;
-  gap: var(--pb-space-2);
+  gap: var(--pb-space-4);
   border-radius: var(--pb-radius);
-  background: var(--pb-paper-overlay-80);
+  background: rgb(255 253 252 / 80%);
   opacity: .4;
   transition: opacity .14s ease;
 }
@@ -222,7 +222,7 @@ onBeforeUnmount(() => {
 .card:hover .card-actions, .card:focus-within .card-actions { opacity: 1; }
 
 .card-time {
-  font-size: 11px;
+  font-size: var(--pb-text-xs);
   color: var(--pb-text-faint);
 }
 
@@ -260,22 +260,22 @@ onBeforeUnmount(() => {
   z-index: 2;
   display: flex;
   align-items: center;
-  gap: var(--pb-space-7);
-  padding: var(--pb-space-4) var(--pb-space-7);
-  border: 1px solid var(--pb-danger-border-soft);
+  gap: var(--pb-space-8);
+  padding: var(--pb-space-4) var(--pb-space-8);
+  border: 1px solid var(--pb-danger-border);
   border-radius: var(--pb-radius-5);
   background: var(--pb-danger-surface);
   color: var(--pb-danger);
-  font-size: 11px;
+  font-size: var(--pb-text-xs);
 }
 
 .card-confirm button {
   min-height: 22px;
-  padding: var(--pb-space-1) var(--pb-space-5);
+  padding: var(--pb-space-px) var(--pb-space-4);
   border: 0;
   background: transparent;
   color: var(--pb-text-soft);
-  font-size: 11px;
+  font-size: var(--pb-text-xs);
 }
 
 .card-confirm .confirm-yes { background: var(--pb-danger-button); color: var(--pb-white); border-radius: var(--pb-radius-3); }
@@ -284,13 +284,13 @@ onBeforeUnmount(() => {
 
 .card-time {
   flex-shrink: 0;
-  color: var(--pb-text-date);
-  font-size: 11px;
+  color: #9a928c;
+  font-size: var(--pb-text-xs);
   font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 360px) {
-  .card { padding: var(--pb-space-10); }
+  .card { padding: var(--pb-space-12); }
   .card-tags { gap: var(--pb-space-4); }
 }
 </style>

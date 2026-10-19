@@ -90,11 +90,11 @@ function onKeydown(event: KeyboardEvent): void {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--pb-space-6);
+  gap: var(--pb-space-8);
   min-height: 42px;
   border: 1px solid var(--pb-border);
   border-radius: var(--pb-radius);
-  padding: var(--pb-space-7) var(--pb-space-8);
+  padding: var(--pb-space-8) var(--pb-space-8);
   background: var(--pb-white);
 }
 
@@ -106,9 +106,9 @@ function onKeydown(event: KeyboardEvent): void {
 .tag-chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--pb-space-3);
-  font-size: 11px;
-  padding: var(--pb-space-3) var(--pb-space-5) var(--pb-space-3) var(--pb-space-7);
+  gap: var(--pb-space-4);
+  font-size: var(--pb-text-xs);
+  padding: var(--pb-space-4) var(--pb-space-4) var(--pb-space-4) var(--pb-space-8);
   border-radius: var(--pb-radius-4);
   background: var(--pb-black-overlay-5);
   color: var(--pb-text);
@@ -118,8 +118,8 @@ function onKeydown(event: KeyboardEvent): void {
 .tag-chip-remove {
   border: none;
   background: transparent;
-  padding: var(--pb-space-0) var(--pb-space-3);
-  font-size: 13px;
+  padding: 0 var(--pb-space-4);
+  font-size: var(--pb-text-md);
   line-height: 1;
   color: inherit;
   opacity: 0.6;
@@ -134,7 +134,7 @@ function onKeydown(event: KeyboardEvent): void {
   flex: 1 1 90px;
   min-width: 90px;
   border: none;
-  padding: var(--pb-space-2) var(--pb-space-0);
+  padding: var(--pb-space-4) 0;
   background: transparent;
 }
 
@@ -147,9 +147,9 @@ function onKeydown(event: KeyboardEvent): void {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--pb-space-8);
-  margin-top: var(--pb-space-6);
+  margin-top: var(--pb-space-8);
   color: var(--pb-text-soft);
-  font-size: 11px;
+  font-size: var(--pb-text-xs);
 }
 
 .suggestion-label { color: var(--pb-text-soft); }
@@ -158,14 +158,14 @@ function onKeydown(event: KeyboardEvent): void {
   min-height: auto;
   border: 0;
   border-radius: var(--pb-radius-none);
-  padding: var(--pb-space-0);
+  padding: 0;
   background: transparent;
   color: inherit;
   font: inherit;
 }
 
 .tag-suggestion {
-  font-size: 11px;
+  font-size: var(--pb-text-xs);
 }
 
 .tag-suggestion:hover:not(:disabled) { background: transparent; color: var(--pb-accent); }

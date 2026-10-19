@@ -199,7 +199,7 @@ function onKeydown(event: KeyboardEvent): void {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  background: var(--pb-white-overlay-50);
+  background: rgb(255 255 255 / 50%);
 }
 
 .editor-head {
@@ -207,15 +207,15 @@ function onKeydown(event: KeyboardEvent): void {
   align-items: center;
   justify-content: space-between;
   min-height: 49px;
-  padding: var(--pb-space-10) var(--pb-space-16);
+  padding: var(--pb-space-12) var(--pb-space-16);
   border-bottom: 1px solid var(--pb-border);
   background: var(--pb-white);
   flex-shrink: 0;
 }
 
 .editor-title {
-  margin: var(--pb-space-0);
-  font-size: 14px;
+  margin: 0;
+  font-size: var(--pb-text-lg);
   font-weight: 500;
 }
 
@@ -226,7 +226,7 @@ function onKeydown(event: KeyboardEvent): void {
   min-height: 24px;
   place-items: center;
   margin-left: calc(-1 * var(--pb-space-4));
-  padding: var(--pb-space-2);
+  padding: var(--pb-space-4);
   border: 0;
   background: transparent;
   color: var(--pb-text-muted);
@@ -249,7 +249,7 @@ function onKeydown(event: KeyboardEvent): void {
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--pb-space-6);
+  gap: var(--pb-space-8);
 }
 
 .field-grow {
@@ -259,13 +259,13 @@ function onKeydown(event: KeyboardEvent): void {
 
 .field-label {
   display: block;
-  font-size: 12px;
+  font-size: var(--pb-text-sm);
   color: var(--pb-text-muted);
   font-weight: 400;
 }
 
-.field-note { color: var(--pb-text-faint); font-size: 11px; }
-.field-required { color: var(--pb-danger-text-soft); }
+.field-note { color: var(--pb-text-faint); font-size: var(--pb-text-xs); }
+.field-required { color: var(--pb-danger-text); }
 
 .field input,
 .field textarea {
@@ -273,7 +273,7 @@ function onKeydown(event: KeyboardEvent): void {
   padding: var(--pb-space-8) var(--pb-space-12);
   border-radius: var(--pb-radius);
   background: var(--pb-white);
-  font-size: 14px;
+  font-size: var(--pb-text-md);
 }
 
 .field textarea {
@@ -309,14 +309,14 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 .folder-input select {
-  padding: var(--pb-space-8) var(--pb-space-30);
+  padding: var(--pb-space-8) var(--pb-space-32);
   background: var(--pb-white);
-  font-size: 14px;
+  font-size: var(--pb-text-md);
 }
 
 .editor-error {
-  margin: var(--pb-space-0);
-  font-size: 12px;
+  margin: 0;
+  font-size: var(--pb-text-sm);
   color: var(--pb-danger);
 }
 
@@ -325,9 +325,9 @@ function onKeydown(event: KeyboardEvent): void {
   justify-content: flex-end;
   gap: var(--pb-space-12);
   min-height: 54px;
-  padding: var(--pb-space-10) var(--pb-space-16);
+  padding: var(--pb-space-12) var(--pb-space-16);
   border-top: 1px solid var(--pb-border);
-  background: var(--pb-white-overlay-80);
+  background: rgb(255 255 255 / 80%);
   flex-shrink: 0;
 }
 
@@ -361,7 +361,7 @@ function onKeydown(event: KeyboardEvent): void {
   justify-content: space-between;
   gap: var(--pb-space-8);
   width: 100%;
-  font-size: 12px;
+  font-size: var(--pb-text-sm);
   color: var(--pb-danger);
 }
 

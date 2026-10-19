@@ -163,7 +163,7 @@ async function handleRemoveTag(tag: string): Promise<void> {
   width: 100%;
   max-width: 720px;
   height: 100%;
-  margin: var(--pb-space-0) auto;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -176,7 +176,7 @@ async function handleRemoveTag(tag: string): Promise<void> {
   align-items: center;
   gap: var(--pb-space-8);
   min-height: 49px;
-  padding: var(--pb-space-10) var(--pb-space-16);
+  padding: var(--pb-space-12) var(--pb-space-16);
   border-bottom: 1px solid var(--pb-border);
   background: var(--pb-white);
   flex-shrink: 0;
@@ -189,7 +189,7 @@ async function handleRemoveTag(tag: string): Promise<void> {
   min-height: 24px;
   place-items: center;
   margin-left: calc(-1 * var(--pb-space-4));
-  padding: var(--pb-space-2);
+  padding: var(--pb-space-4);
   border: 0;
   background: transparent;
   color: var(--pb-text-muted);
@@ -203,7 +203,7 @@ async function handleRemoveTag(tag: string): Promise<void> {
   flex: 1;
   min-height: 0;
   flex-direction: column;
-  gap: var(--pb-space-40);
+  gap: var(--pb-space-32);
   overflow-y: auto;
   padding: var(--pb-space-32);
 }
@@ -212,24 +212,24 @@ async function handleRemoveTag(tag: string): Promise<void> {
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: var(--pb-space-10);
+  gap: var(--pb-space-12);
   flex: 1;
-  padding: var(--pb-space-40) var(--pb-space-18);
+  padding: var(--pb-space-32) var(--pb-space-16);
   color: var(--pb-text-muted);
 }
 
 .state-title,
 .state-copy {
-  margin: var(--pb-space-0);
+  margin: 0;
 }
 
-.state-title { color: var(--pb-text); font-size: 13px; font-weight: 500; }
-.state-copy { color: var(--pb-text-muted); font-size: 12px; text-align: center; }
-.state-retry { margin-top: var(--pb-space-5); border-color: var(--pb-accent); background: var(--pb-accent); color: var(--pb-on-accent); }
+.state-title { color: var(--pb-text); font-size: var(--pb-text-md); font-weight: 500; }
+.state-copy { color: var(--pb-text-muted); font-size: var(--pb-text-sm); text-align: center; }
+.state-retry { margin-top: var(--pb-space-4); border-color: var(--pb-accent); background: var(--pb-accent); color: var(--pb-on-accent); }
 .state-retry:hover:not(:disabled) { border-color: var(--pb-accent-hover); background: var(--pb-accent-hover); }
 
 @media (max-width: 480px) {
-  .settings-bar { padding-inline: var(--pb-space-20); }
-  .settings-body { padding: var(--pb-space-22) var(--pb-space-20); gap: var(--pb-space-32); }
+  .settings-bar { padding-inline: var(--pb-space-24); }
+  .settings-body { padding: var(--pb-space-24) var(--pb-space-24); gap: var(--pb-space-32); }
 }
 </style>
