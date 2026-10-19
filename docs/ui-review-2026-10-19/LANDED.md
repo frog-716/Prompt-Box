@@ -4,8 +4,7 @@
 
 ## 1. 交付结论
 
-`docs/ui-review-2026-10-19/html/` 下的静态原型（最终确认版）已**完整装载**进
-`src/ui/`，界面呈现、组件结构、样式、交互逻辑一致。验证方式不是目测代码，
+本次评审的静态原型（最终确认版）已**完整装载**进 `src/ui/`，界面呈现、组件结构、样式、交互逻辑一致。验证方式不是目测代码，
 而是重新构建扩展后用无头 Chrome 真实加载、点击、截图，共 8 张状态图全部对上。
 
 ## 2. 文件级改动清单
@@ -19,7 +18,7 @@
 | `options.html` | `src/ui/settings/App.vue` | **删除**（设置已内嵌为视图，不再是独立入口） |
 | `options.html` | `src/entrypoints/options/` | **删除**（manifest 不再有 options_page，点击设置不再开新标签） |
 | — | `src/ui/sidepanel/App.vue` | **重写**：`view` 状态机 `list/editor/settings`；设置按钮切到 settings 视图、`@close` 返回列表；移除 `openOptionsPage` 调用 |
-| — | `src/infra/runtime.ts` | 删除 `openOptionsPage()` 及随之无用的 `browser` 引入 |
+| — | `src/infra/runtime.ts` | 删除 `openOptionsPage()` 及随之无用的 `browser` 引入（该文件整体已于 2026-10-20 清理：共享试验死代码，全仓零引用） |
 
 ## 3. 行为变化（用户明确要求）
 
@@ -60,8 +59,9 @@
   「有未保存的更改，放弃吗？［继续编辑］［放弃更改］」（与卡片删除确认同款模式，不弹窗），
   确认中再按 Escape = 继续编辑。验证：verify/test/build 全绿，
   新增实拍图 `shots/sidepanel-360-editor-escape-confirm.png`（草稿保留 + 确认条出现）。
-- `html/` 原型页保留作标注脚手架（含 `--pb-radius-6` 的历史说明文字），
-  不进入生产；如不再需要可整体删除。
+- ~~`html/` 原型页保留作标注脚手架~~ **已清理（2026-10-20）**：装载验证完成后
+  不再需要，整目录删除（含 `--pb-radius-6` 的历史说明文字）；删除前曾备份至
+  `/tmp/pb-cleanup-backup/html/`。
 
 ## 6. 第二轮精简（19:40，用户截图标注）
 

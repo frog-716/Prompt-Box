@@ -37,9 +37,11 @@ try {
     rmSync(output, { force: true });
     const child = spawn(chrome, [
       '--headless=new',
+      '--no-sandbox',
       '--disable-gpu',
       '--disable-extensions',
       '--disable-background-networking',
+      '--disable-crash-reporter',
       '--no-first-run',
       '--no-default-browser-check',
       '--force-device-scale-factor=2',
