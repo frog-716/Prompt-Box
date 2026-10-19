@@ -6,7 +6,7 @@
  * 编辑与删除退到角落，删除还需要点两下（内联确认），避免手滑丢内容。
  */
 
-import { onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 
 import { summarize } from '@/domain/prompt';
 import type { Prompt } from '@/domain/types';
@@ -25,6 +25,10 @@ const emit = defineEmits<{
 
 const confirming = ref(false);
 let confirmTimer: ReturnType<typeof setTimeout> | undefined;
+
+// 预览与时间是纯派生态：按 prompt 引用缓存，父级重渲染复用时不再重算。
+const preview = computed(() => summarize(props.prompt.content));
+const timeLabel = computed(() => formatDateTime(props.prompt.updatedAt).slice(5, 10));
 
 function requestRemove(): void {
   confirming.value = true;
@@ -85,7 +89,7 @@ onBeforeUnmount(() => {
       </button>
     </div>
 
-    <p v-if="prompt.content.trim()" class="card-preview">{{ summarize(prompt.content) }}</p>
+    <p v-if="prompt.content.trim()" class="card-preview">{{ preview }}</p>
 
     <footer class="card-foot">
       <div class="card-tags">
@@ -95,7 +99,7 @@ onBeforeUnmount(() => {
         </span>
         <span v-for="tag in prompt.tags" :key="tag" class="card-tag">#{{ tag }}</span>
       </div>
-      <span class="card-time">{{ formatDateTime(prompt.updatedAt).slice(5, 10) }}</span>
+      <span class="card-time">{{ timeLabel }}</span>
     </footer>
   </article>
 </template>
@@ -109,6 +113,9 @@ onBeforeUnmount(() => {
   background: var(--pb-surface);
   box-shadow: var(--pb-shadow-card);
   cursor: pointer;
+  /* 离屏卡片跳过布局与绘制，长列表滚动更顺；auto 会在首次渲染后记住真实高度 */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 104px;
   transition: border-color 0.14s ease, box-shadow 0.14s ease;
 }
 

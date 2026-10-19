@@ -1,8 +1,10 @@
 <script setup lang="ts">
 /**
- * 设置页根组件。
+ * 设置视图。
  *
- * 设置页负责 Markdown 导出、清空、分类与标签管理。
+ * 设置不再是独立页面，而是侧边栏/标签页内的一个视图，与列表、编辑互斥切换：
+ * 顶部「返回」回到列表。承载 Markdown 导出、清空、文件夹与标签管理这些
+ * 低频「整理类」操作。与旧 options 页共用同一套 composable 与 domain 逻辑。
  */
 
 import { downloadMarkdown } from '@/infra/markdown-export';
@@ -32,6 +34,10 @@ const {
 } = useLibrary();
 
 const { message, tone, show } = useToast();
+
+const emit = defineEmits<{
+  close: [];
+}>();
 
 function handleExport(): void {
   try {
@@ -118,12 +124,14 @@ async function handleRemoveTag(tag: string): Promise<void> {
     </div>
 
     <template v-else>
-      <header class="settings-head">
-        <div>
-          <h1 class="settings-title">Prompt-Box 设置</h1>
-          <p class="settings-sub">管理本地数据、分类与标签。所有内容仅保存在这台设备。</p>
-        </div>
-      </header>
+      <div class="settings-bar">
+        <button type="button" class="settings-back" aria-label="返回列表" @click="emit('close')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+        </button>
+        <span class="settings-bar-title">设置</span>
+      </div>
+
+      <p class="settings-intro">管理本地数据、分类与标签。所有内容仅保存在这台设备。</p>
 
       <div class="settings-body">
         <DataPanel
@@ -157,7 +165,7 @@ async function handleRemoveTag(tag: string): Promise<void> {
 .settings {
   width: 100%;
   max-width: 720px;
-  height: 720px;
+  height: 100%;
   margin: var(--pb-space-0) auto;
   display: flex;
   flex-direction: column;
@@ -165,29 +173,45 @@ async function handleRemoveTag(tag: string): Promise<void> {
   background: var(--pb-bg);
 }
 
-.settings-head {
+/* 顶部返回栏（与编辑器返回栏同一模式） */
+.settings-bar {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-shrink: 0;
-  padding: var(--pb-space-24) var(--pb-space-32);
+  align-items: center;
+  gap: var(--pb-space-8);
+  min-height: 49px;
+  padding: var(--pb-space-10) var(--pb-space-16);
   border-bottom: 1px solid var(--pb-border);
-  background: var(--pb-white-overlay-40);
+  background: var(--pb-white);
+  flex-shrink: 0;
 }
 
-.settings-title {
-  margin: var(--pb-space-0);
+.settings-bar-title {
   font-family: var(--pb-font-display);
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.25;
+  font-size: 16px;
+  font-weight: 600;
 }
 
-.settings-sub {
-  margin: var(--pb-space-4) var(--pb-space-0) var(--pb-space-0);
-  max-width: 520px;
-  font-size: 13px;
+.settings-back {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  place-items: center;
+  margin-left: calc(-1 * var(--pb-space-4));
+  padding: var(--pb-space-2);
+  border: 0;
+  background: transparent;
   color: var(--pb-text-muted);
+}
+
+.settings-back svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.settings-back:hover:not(:disabled) { background: transparent; color: var(--pb-text); }
+
+.settings-intro {
+  margin: var(--pb-space-0);
+  padding: var(--pb-space-0) var(--pb-space-32) var(--pb-space-8);
+  color: var(--pb-text-muted);
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -206,7 +230,7 @@ async function handleRemoveTag(tag: string): Promise<void> {
   justify-items: center;
   align-content: center;
   gap: var(--pb-space-10);
-  min-height: 100%;
+  flex: 1;
   padding: var(--pb-space-40) var(--pb-space-18);
   color: var(--pb-text-muted);
 }
@@ -222,11 +246,8 @@ async function handleRemoveTag(tag: string): Promise<void> {
 .state-retry:hover:not(:disabled) { border-color: var(--pb-accent-hover); background: var(--pb-accent-hover); }
 
 @media (max-width: 480px) {
-  .settings { height: min(720px, 100vh); }
-  .settings-head { padding: var(--pb-space-22) var(--pb-space-20); }
+  .settings-bar { padding-inline: var(--pb-space-20); }
+  .settings-intro { padding-inline: var(--pb-space-20); }
   .settings-body { padding: var(--pb-space-22) var(--pb-space-20); gap: var(--pb-space-32); }
-  .settings-title { font-size: 22px; }
 }
-
-@media (max-height: 719px) { .settings { height: 100vh; } }
 </style>

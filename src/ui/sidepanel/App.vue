@@ -2,8 +2,9 @@
 /**
  * 主界面根组件。
  *
- * 只有两种视图：列表和编辑，互斥切换 —— 不做弹窗、不做抽屉，
- * 兼顾窄视窗与独立标签页两种窗口尺寸。
+ * 三种视图互斥切换：列表、编辑、设置 —— 不做弹窗、不做抽屉，
+ * 兼顾窄视窗（侧边栏）与独立标签页两种窗口尺寸。
+ * 设置不再是新标签页，而是与列表/编辑并列的一个视图，可原路返回。
  *
  * 这里也是唯一把「用户动作」翻译成「领域操作」的地方：
  * 组件本身不认识 storage，composable 不认识 DOM。
@@ -12,12 +13,11 @@
 import { computed, ref } from 'vue';
 
 import { copyText } from '@/infra/clipboard';
-import { openOptionsPage } from '@/infra/runtime';
 import type { Prompt, PromptDraft } from '@/domain/types';
-import AppHeader from '@/ui/components/AppHeader.vue';
 import FilterBar from '@/ui/components/FilterBar.vue';
 import PromptEditor from '@/ui/components/PromptEditor.vue';
 import PromptList from '@/ui/components/PromptList.vue';
+import SettingsView from '@/ui/components/SettingsView.vue';
 import ToastBar from '@/ui/components/ToastBar.vue';
 import { useFilters } from '@/ui/composables/useFilters';
 import { useLibrary } from '@/ui/composables/useLibrary';
@@ -38,7 +38,9 @@ const { query, folderId, tags, visible, selectFolder, toggleTag } = useFilters(p
 
 const { message, tone, show } = useToast();
 
-const editorOpen = ref(false);
+type View = 'list' | 'editor' | 'settings';
+
+const view = ref<View>('list');
 const editing = ref<Prompt | null>(null);
 const saving = ref(false);
 const saveError = ref('');
@@ -48,22 +50,23 @@ const tagSuggestions = computed(() => tagStats.value.map((stat) => stat.name));
 const folderNames = computed<Record<string, string>>(() =>
   Object.fromEntries(folders.value.map((folder) => [folder.id, folder.name])),
 );
+
 function openCreate(): void {
   editing.value = null;
   saveError.value = '';
   allowSaveAsNew.value = false;
-  editorOpen.value = true;
+  view.value = 'editor';
 }
 
 function openEdit(prompt: Prompt): void {
   editing.value = { ...prompt, tags: [...prompt.tags] };
   saveError.value = '';
   allowSaveAsNew.value = false;
-  editorOpen.value = true;
+  view.value = 'editor';
 }
 
 function closeEditor(): void {
-  editorOpen.value = false;
+  view.value = 'list';
   editing.value = null;
 }
 
@@ -111,11 +114,6 @@ async function handleRemove(prompt: Prompt): Promise<void> {
     show('删除失败，数据未更改', { tone: 'error' });
   }
 }
-
-function openSettings(): void {
-  openOptionsPage();
-}
-
 </script>
 
 <template>
@@ -127,7 +125,7 @@ function openSettings(): void {
     </div>
 
     <PromptEditor
-      v-else-if="editorOpen"
+      v-else-if="view === 'editor'"
       :prompt="editing"
       :folders="folders"
       :tag-suggestions="tagSuggestions"
@@ -139,8 +137,12 @@ function openSettings(): void {
       @cancel="closeEditor"
     />
 
-    <template v-else-if="ready">
-      <AppHeader @create="openCreate" @open-settings="openSettings" />
+    <SettingsView
+      v-else-if="view === 'settings'"
+      @close="view = 'list'"
+    />
+
+    <template v-else>
       <FilterBar
         :query="query"
         :folder-id="folderId"
@@ -150,6 +152,8 @@ function openSettings(): void {
         @update:query="query = $event"
         @select-folder="selectFolder"
         @toggle-tag="toggleTag"
+        @create="openCreate"
+        @open-settings="view = 'settings'"
       />
       <div class="app-body">
         <PromptList
@@ -226,5 +230,4 @@ function openSettings(): void {
   border-color: var(--pb-accent-hover);
   background: var(--pb-accent-hover);
 }
-
 </style>

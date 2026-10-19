@@ -1,6 +1,9 @@
 <script setup lang="ts">
 /**
- * 搜索、文件夹下拉与标签按钮，按 Gemini A 原型排列。
+ * 搜索、文件夹下拉、标签按钮，以及「新建 / 设置」入口。
+ *
+ * 新建与设置从旧顶部栏并入此处：搜索框与两个图标按钮占第一行（按钮靠右），
+ * 文件夹下拉与标签落到第二行（文件夹靠左）——与最终确认的原型布局一致。
  */
 
 import type { Folder, TagStat } from '@/domain/types';
@@ -18,6 +21,8 @@ const emit = defineEmits<{
   'update:query': [value: string];
   'select-folder': [value: FolderSelection];
   'toggle-tag': [tag: string];
+  create: [];
+  openSettings: [];
 }>();
 </script>
 
@@ -33,6 +38,15 @@ const emit = defineEmits<{
         autocomplete="off"
         @input="emit('update:query', ($event.target as HTMLInputElement).value)"
       />
+    </div>
+
+    <div class="filter-actions">
+      <button type="button" class="header-icon-btn" aria-label="新建提示词" title="新建" @click="emit('create')">
+        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+      </button>
+      <button type="button" class="header-icon-btn" aria-label="打开设置" title="设置" @click="emit('openSettings')">
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" /><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .8v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.8l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.8-3H4a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .8-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.8V2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .8l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .8 3h.2a1.8 1.8 0 0 1 0 3.6H20a1.8 1.8 0 0 0-.6 3Z" /></svg>
+      </button>
     </div>
 
     <div class="folder-select-wrap">
@@ -64,14 +78,17 @@ const emit = defineEmits<{
 <style scoped>
 .filter-bar {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--pb-space-12);
   padding: var(--pb-space-12) var(--pb-space-16);
   border-bottom: 1px solid var(--pb-border);
   background: var(--pb-paper-overlay-20);
 }
 
-.search-wrap { position: relative; }
+.search-wrap { position: relative; flex: 1 1 160px; min-width: 0; }
+
+.filter-actions { display: flex; align-items: center; gap: var(--pb-space-8); flex: 0 0 auto; }
 
 .search-icon {
   position: absolute;
@@ -95,10 +112,33 @@ const emit = defineEmits<{
   background: var(--pb-white-overlay-60);
 }
 
+.header-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: var(--pb-space-4);
+  color: var(--pb-text-muted);
+  background: transparent;
+  border-color: transparent;
+  border-radius: var(--pb-radius);
+}
+
+.header-icon-btn:hover:not(:disabled) {
+  color: var(--pb-text);
+  border-color: transparent;
+  background: var(--pb-black-overlay-5);
+}
+
+.header-icon-btn svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
 .folder-select-wrap {
   display: flex;
   align-items: center;
   gap: var(--pb-space-8);
+  flex: 0 0 auto;
 }
 
 .folder-icon {
@@ -129,7 +169,7 @@ const emit = defineEmits<{
   display: flex;
   flex-wrap: wrap;
   gap: var(--pb-space-6);
-  padding-top: var(--pb-space-4);
+  flex: 1 1 auto;
 }
 
 .tag-pill {

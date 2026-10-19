@@ -108,6 +108,24 @@ export function collectTagStats(prompts: readonly Prompt[]): TagStat[] {
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 
+/**
+ * 搜索用小写文本缓存。
+ *
+ * Prompt 是「改即换新对象」的不可变值，因此可按对象引用记忆：
+ * 编辑后自然失效、旧对象被 GC 回收。这样搜索每敲一个字做全量过滤时，
+ * 不必对长原文反复 toLowerCase()。
+ */
+const searchTextCache = new WeakMap<Prompt, { title: string; content: string }>();
+
+function searchText(prompt: Prompt): { title: string; content: string } {
+  let entry = searchTextCache.get(prompt);
+  if (entry === undefined) {
+    entry = { title: prompt.title.toLowerCase(), content: prompt.content.toLowerCase() };
+    searchTextCache.set(prompt, entry);
+  }
+  return entry;
+}
+
 /** 按筛选条件过滤提示词。标签之间是「与」关系。 */
 export function filterPrompts(
   prompts: readonly Prompt[],
@@ -122,9 +140,10 @@ export function filterPrompts(
       return false;
     }
     if (!query) return true;
+    const text = searchText(prompt);
     return (
-      prompt.title.toLowerCase().includes(query) ||
-      prompt.content.toLowerCase().includes(query) ||
+      text.title.includes(query) ||
+      text.content.includes(query) ||
       prompt.tags.some((tag) => tag.includes(query))
     );
   });
