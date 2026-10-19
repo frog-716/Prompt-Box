@@ -86,7 +86,9 @@ onBeforeUnmount(() => {
           placeholder="输入新文件夹名称..."
           @keydown.enter.prevent="submitNew"
         />
-        <button type="button" class="add-button" @click="submitNew">新增</button>
+        <button type="button" class="add-button" aria-label="新增文件夹" title="新增" @click="submitNew">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        </button>
       </div>
 
       <ul class="list">
@@ -150,8 +152,22 @@ onBeforeUnmount(() => {
 }
 
 .add-row input { width: 100%; max-width: 360px; min-width: 0; padding: var(--pb-space-7) var(--pb-space-12); font-size: 12px; }
-.add-button { border-color: var(--pb-border); background: var(--pb-surface-soft); color: var(--pb-text-soft); font-size: 12px; }
-.add-button:hover:not(:disabled) { background: var(--pb-border); }
+
+/* 「新增」用 + 图标表达，不用文字 */
+.add-button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  min-height: 34px;
+  flex: 0 0 auto;
+  padding: var(--pb-space-4);
+  border-color: var(--pb-border);
+  background: var(--pb-surface-soft);
+  color: var(--pb-text-soft);
+}
+
+.add-button:hover:not(:disabled) { background: var(--pb-border); color: var(--pb-text); }
+.add-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 .list {
   list-style: none;

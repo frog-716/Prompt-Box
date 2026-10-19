@@ -128,10 +128,7 @@ async function handleRemoveTag(tag: string): Promise<void> {
         <button type="button" class="settings-back" aria-label="返回列表" @click="emit('close')">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </button>
-        <span class="settings-bar-title">设置</span>
       </div>
-
-      <p class="settings-intro">管理本地数据、分类与标签。所有内容仅保存在这台设备。</p>
 
       <div class="settings-body">
         <DataPanel
@@ -173,7 +170,7 @@ async function handleRemoveTag(tag: string): Promise<void> {
   background: var(--pb-bg);
 }
 
-/* 顶部返回栏（与编辑器返回栏同一模式） */
+/* 顶部返回栏（与编辑器返回栏同一模式）：只有一个返回箭头，不用文字 */
 .settings-bar {
   display: flex;
   align-items: center;
@@ -183,12 +180,6 @@ async function handleRemoveTag(tag: string): Promise<void> {
   border-bottom: 1px solid var(--pb-border);
   background: var(--pb-white);
   flex-shrink: 0;
-}
-
-.settings-bar-title {
-  font-family: var(--pb-font-display);
-  font-size: 16px;
-  font-weight: 600;
 }
 
 .settings-back {
@@ -206,14 +197,6 @@ async function handleRemoveTag(tag: string): Promise<void> {
 
 .settings-back svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .settings-back:hover:not(:disabled) { background: transparent; color: var(--pb-text); }
-
-.settings-intro {
-  margin: var(--pb-space-0);
-  padding: var(--pb-space-0) var(--pb-space-32) var(--pb-space-8);
-  color: var(--pb-text-muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
 
 .settings-body {
   display: flex;
@@ -247,7 +230,6 @@ async function handleRemoveTag(tag: string): Promise<void> {
 
 @media (max-width: 480px) {
   .settings-bar { padding-inline: var(--pb-space-20); }
-  .settings-intro { padding-inline: var(--pb-space-20); }
   .settings-body { padding: var(--pb-space-22) var(--pb-space-20); gap: var(--pb-space-32); }
 }
 </style>
