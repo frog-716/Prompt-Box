@@ -3,7 +3,7 @@
 
 import { onBeforeUnmount, ref } from 'vue';
 
-defineProps<{ promptCount: number; jsonExportOnly?: boolean }>();
+defineProps<{ promptCount: number }>();
 
 const emit = defineEmits<{
   export: [];
@@ -50,7 +50,7 @@ onBeforeUnmount(() => {
           <p class="stat-line">当前共保存了 <strong>{{ promptCount }}</strong> 条提示词。</p>
           <div class="export-note">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg>
-            <p><strong>导出说明：</strong>Markdown 按最近修改时间倒序排列；{{ jsonExportOnly ? '完整 JSON 备份见下方。' : 'JSON 备份与迁移预览见下方。' }}</p>
+            <p><strong>导出说明：</strong>Markdown 按最近修改时间倒序排列，可整体复制保存为备份。</p>
           </div>
         </div>
 

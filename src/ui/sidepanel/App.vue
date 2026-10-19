@@ -19,7 +19,6 @@ import FilterBar from '@/ui/components/FilterBar.vue';
 import PromptEditor from '@/ui/components/PromptEditor.vue';
 import PromptList from '@/ui/components/PromptList.vue';
 import ToastBar from '@/ui/components/ToastBar.vue';
-import SyncStatusBar from '@/ui/components/SyncStatusBar.vue';
 import { useFilters } from '@/ui/composables/useFilters';
 import { useLibrary } from '@/ui/composables/useLibrary';
 import { useToast } from '@/ui/composables/useToast';
@@ -27,16 +26,12 @@ import { useToast } from '@/ui/composables/useToast';
 const {
   ready,
   loadError,
-  storageStatus,
   reload,
   prompts,
   folders,
   tagStats,
   savePrompt,
   deletePrompt,
-  retryPending,
-  discardPending,
-  exportPendingDraft,
 } = useLibrary();
 
 const { query, folderId, tags, visible, selectFolder, toggleTag } = useFilters(prompts, folders, tagStats);
@@ -121,52 +116,14 @@ function openSettings(): void {
   openOptionsPage();
 }
 
-async function handleRetrySync(): Promise<void> {
-  try {
-    await retryPending();
-    await reload();
-    if (storageStatus.value.state === 'online') show('已连接共享服务');
-  } catch (error) {
-    console.error('[Prompt Box] 重试共享服务失败：', error);
-    show('仍无法确认共享服务请求，请稍后重试', { tone: 'error' });
-  }
-}
-
-async function handleDiscardPending(): Promise<void> {
-  try {
-    await discardPending();
-    await reload();
-    show('已清除本机待确认记录；未回滚服务端数据');
-  } catch (error) {
-    console.error('[Prompt Box] 清除待确认请求失败：', error);
-    show('清除失败，请重试', { tone: 'error' });
-  }
-}
-
-async function handleExportPending(): Promise<void> {
-  try {
-    const exported = await exportPendingDraft();
-    show(exported ? '待确认草稿已下载为 JSON' : '没有待确认草稿', exported ? {} : { tone: 'error' });
-  } catch (error) {
-    console.error('[Prompt Box] 下载待确认草稿失败：', error);
-    show('下载失败，请重试', { tone: 'error' });
-  }
-}
-
 </script>
 
 <template>
   <div class="app">
-    <SyncStatusBar :status="storageStatus" :settings-link="ready" @open-settings="openSettings" @retry="handleRetrySync" @discard="handleDiscardPending" @export-pending="handleExportPending" />
     <div v-if="!ready" class="load-state" :role="loadError ? 'alert' : 'status'">
       <p class="state-title">{{ loadError ? '暂时无法读取提示词' : '正在打开提示词本…' }}</p>
-      <p v-if="loadError" class="state-copy">{{ storageStatus.mode === 'shared'
-        ? storageStatus.state === 'unpaired'
-          ? '此设备尚未配对。请打开设置页生成或输入一次性配对码；配对前不会读取或写入共享数据。'
-          : '无法连接同机共享服务；本次没有报告保存成功。服务恢复后可重新连接。'
-        : '本机数据没有被更改。请检查后重试。' }}</p>
-      <button v-if="loadError && storageStatus.mode === 'shared' && storageStatus.state === 'unpaired'" type="button" class="state-retry" @click="openSettings">打开设置完成配对</button>
-      <button v-else-if="loadError" type="button" class="state-retry" @click="reload">重新读取</button>
+      <p v-if="loadError" class="state-copy">本机数据没有被更改。请检查后重试。</p>
+      <button v-if="loadError" type="button" class="state-retry" @click="reload">重新读取</button>
     </div>
 
     <PromptEditor

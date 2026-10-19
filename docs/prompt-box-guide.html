@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt-Box 项目导览 · 改前端前先读这页</title>
+<style>
+  :root {
+    --bg: #f9f8f6;
+    --surface: #fffdfc;
+    --border: #e8e3de;
+    --border-strong: #d7d0ca;
+    --text: #2c2a29;
+    --muted: #6f6963;
+    --faint: #9a938c;
+    --accent: #c77560;
+    --accent-soft: #f6e9e4;
+    --c-domain: #7c5cbf;  --c-domain-bg: #f1ecfb;
+    --c-infra: #2f6fb0;   --c-infra-bg: #e9f1fa;
+    --c-ui: #2e8b74;      --c-ui-bg: #e6f4f0;
+    --c-entry: #c07a1e;   --c-entry-bg: #fbf1e0;
+    --c-shared: #6b625e;  --c-shared-bg: #efedea;
+    --danger: #b85b50;    --danger-bg: #fdeeeC;
+    --code-bg: #f3efe9;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 17px;
+    line-height: 1.9;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 28px 90px; }
+
+  /* ---------- 页头 ---------- */
+  header.hero { padding: 56px 0 10px; }
+  .hero h1 { font-size: 34px; line-height: 1.3; margin: 0 0 14px; letter-spacing: .5px; }
+  .hero .verdict {
+    background: var(--surface); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; font-size: 19px; font-weight: 600; margin: 0 0 18px;
+  }
+  .hero .verdict small { display: block; font-weight: 400; color: var(--muted); font-size: 15px; margin-top: 6px; }
+  .readtips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .readtips span {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+    padding: 4px 14px; font-size: 14px; color: var(--muted);
+  }
+
+  /* ---------- 吸顶导航 ---------- */
+  nav.toc {
+    position: sticky; top: 0; z-index: 10; background: rgb(249 248 246 / 92%);
+    backdrop-filter: blur(8px); border-bottom: 1px solid var(--border);
+    margin: 26px -28px 0; padding: 10px 28px; display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  nav.toc a {
+    text-decoration: none; color: var(--text); font-size: 14.5px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 4px 14px;
+  }
+  nav.toc a:hover { border-color: var(--accent); color: var(--accent); }
+  nav.toc a b { color: var(--accent); margin-right: 4px; }
+
+  /* ---------- 章节 ---------- */
+  section { margin-top: 54px; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .sec-num {
+    font-size: 15px; font-weight: 700; color: #fff; background: var(--accent);
+    border-radius: 8px; padding: 1px 10px; flex: none;
+  }
+  .sec-head h2 { font-size: 25px; margin: 0; }
+  .sec-lead { color: var(--muted); font-size: 16px; margin: 0 0 20px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px 24px; margin-bottom: 16px;
+  }
+  .card h3 { margin: 0 0 8px; font-size: 18px; }
+  .card p { margin: 0 0 8px; }
+  .card p:last-child { margin-bottom: 0; }
+
+  .tag {
+    display: inline-block; font-size: 13.5px; font-weight: 700; border-radius: 6px;
+    padding: 0 8px; margin-right: 6px; vertical-align: 1px;
+  }
+  .tag.domain { color: var(--c-domain); background: var(--c-domain-bg); }
+  .tag.infra  { color: var(--c-infra);  background: var(--c-infra-bg); }
+  .tag.ui     { color: var(--c-ui);     background: var(--c-ui-bg); }
+  .tag.entry  { color: var(--c-entry);  background: var(--c-entry-bg); }
+  .tag.shared { color: var(--c-shared); background: var(--c-shared-bg); }
+  .tag.no     { color: var(--danger);   background: var(--danger-bg); }
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.86em; background: var(--code-bg); border-radius: 5px; padding: 1px 6px;
+  }
+  .path { color: var(--c-infra); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 14px; color: var(--faint); font-weight: 700; letter-spacing: .5px; }
+  tr:last-child td { border-bottom: 0; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* 清单勾选样式 */
+  ul.check { list-style: none; padding: 0; margin: 0; }
+  ul.check li {
+    position: relative; padding: 10px 12px 10px 46px; border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 10px; background: var(--surface);
+  }
+  ul.check li::before {
+    content: ""; position: absolute; left: 14px; top: 15px; width: 18px; height: 18px;
+    border: 2px solid var(--c-ui); border-radius: 5px; background: var(--c-ui-bg);
+  }
+  ul.check li b { color: var(--c-ui); }
+  ul.check li.dont::before { border-color: var(--danger); background: var(--danger-bg); content: "×"; color: var(--danger); font-weight: 800; text-align: center; line-height: 15px; }
+  ul.check li.dont b { color: var(--danger); }
+
+  .diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 14px 10px; margin-bottom: 16px; }
+  .diagram figcaption { color: var(--faint); font-size: 14px; padding: 6px 10px 8px; }
+
+  .footer-cta {
+    margin-top: 60px; background: var(--surface); border: 2px dashed var(--accent);
+    border-radius: 14px; padding: 26px 28px;
+  }
+  .footer-cta h2 { margin: 0 0 8px; font-size: 22px; }
+  .footer-cta p { margin: 0 0 6px; color: var(--muted); }
+  .footer-cta p:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ============ 页头 ============ -->
+<header class="hero">
+  <h1>Prompt-Box 项目导览</h1>
+  <p class="verdict">
+    一句话：这是一个 Chrome 扩展，帮你「存提示词 → 分类 → 一键复制」。
+    <small>全部数据只存在你自己电脑里。不上传、不联网、不要账号、不往任何网站注入脚本。</small>
+  </p>
+  <div class="readtips">
+    <span>📖 每节一个主题，可分开读</span>
+    <span>🎨 颜色 = 架构分层，全文一致</span>
+    <span>🔗 顶部导航可跳转</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#s1"><b>01</b>这是什么</a>
+  <a href="#s2"><b>02</b>三件事</a>
+  <a href="#s3"><b>03</b>架构分层</a>
+  <a href="#s4"><b>04</b>数据怎么流动</a>
+  <a href="#s5"><b>05</b>前端文件地图</a>
+  <a href="#s6"><b>06</b>改前端铁律</a>
+  <a href="#s7"><b>07</b>常用命令</a>
+</nav>
+
+<!-- ============ 01 这是什么 ============ -->
+<section id="s1">
+  <div class="sec-head"><span class="sec-num">01</span><h2>这是什么项目</h2></div>
+  <p class="sec-lead">先建立整体印象，细节后面几节再展开。</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>✅ 它做什么</h3>
+      <p>一个 <b>Chrome 扩展（MV3）</b>。界面有两处：侧边栏 + 独立标签页（设置页）。</p>
+      <p>用户能做的全部事情：<b>存</b>提示词、用文件夹/标签<b>分</b>类、点一下<b>复制</b>到剪贴板。</p>
+    </div>
+    <div class="card">
+      <h3><span class="tag no">不做</span> 明确不碰的边界</h3>
+      <p>不往第三方网站注入脚本、不自动填输入框。</p>
+      <p>不申请任何网站访问权限；不联网、无服务器、无账号。</p>
+      <p>界面只有中文，不做多语言。</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🧱 技术栈（三件事就够记住）</h3>
+    <table>
+      <tr><th>技术</th><th>用来干嘛</th></tr>
+      <tr><td><b>Vue 3</b></td><td>所有界面（侧边栏、设置页）</td></tr>
+      <tr><td><b>WXT</b></td><td>扩展的构建/打包框架，入口在 <code>src/entrypoints/</code></td></tr>
+      <tr><td><b>chrome.storage.local</b></td><td>唯一的数据仓库（正式版），相当于扩展自带的本地数据库</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 02 三件事 ============ -->
+<section id="s2">
+  <div class="sec-head"><span class="sec-num">02</span><h2>三个核心功能</h2></div>
+  <p class="sec-lead">整个产品就浓缩成这张图。记住这三个动词，就看懂了 80%。</p>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 860 250" width="100%" role="img" aria-label="三个核心功能：记、分、取">
+      <defs>
+        <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#c77560"/>
+        </marker>
+      </defs>
+
+      <!-- 记 -->
+      <rect x="30" y="55" width="230" height="150" rx="14" fill="#f6e9e4" stroke="#c77560" stroke-width="2"/>
+      <text x="145" y="95" text-anchor="middle" font-size="30" font-weight="800" fill="#c77560">记</text>
+      <text x="145" y="125" text-anchor="middle" font-size="15" fill="#2c2a29">随时保存提示词</text>
+      <text x="145" y="150" text-anchor="middle" font-size="13" fill="#6f6963">标题 + 原文</text>
+      <text x="145" y="173" text-anchor="middle" font-size="13" fill="#6f6963">右键菜单也能存选中文字</text>
+
+      <!-- 分 -->
+      <rect x="315" y="55" width="230" height="150" rx="14" fill="#f1ecfb" stroke="#7c5cbf" stroke-width="2"/>
+      <text x="430" y="95" text-anchor="middle" font-size="30" font-weight="800" fill="#7c5cbf">分</text>
+      <text x="430" y="125" text-anchor="middle" font-size="15" fill="#2c2a29">文件夹 + 标签分类</text>
+      <text x="430" y="150" text-anchor="middle" font-size="13" fill="#6f6963">文件夹：单选归属</text>
+      <text x="430" y="173" text-anchor="middle" font-size="13" fill="#6f6963">标签：多选标记，可叠加筛选</text>
+
+      <!-- 取 -->
+      <rect x="600" y="55" width="230" height="150" rx="14" stroke="#2e8b74" stroke-width="2" fill="#e6f4f0"/>
+      <text x="715" y="95" text-anchor="middle" font-size="30" font-weight="800" fill="#2e8b74">取</text>
+      <text x="715" y="125" text-anchor="middle" font-size="15" fill="#2c2a29">点卡片 = 复制原文</text>
+      <text x="715" y="150" text-anchor="middle" font-size="13" fill="#6f6963">整张卡片就是大按钮</text>
+      <text x="715" y="173" text-anchor="middle" font-size="13" fill="#6f6963">成功后底部 toast 提示</text>
+
+      <line x1="262" y1="130" x2="310" y2="130" stroke="#c77560" stroke-width="2.5" marker-end="url(#arr)"/>
+      <line x1="547" y1="130" x2="595" y2="130" stroke="#c77560" stroke-width="2.5" marker-end="url(#arr)"/>
+    </svg>
+    <figcaption>三个动词串起完整使用路径：存进来 → 归类好 → 秒复制走。</figcaption>
+  </figure>
+
+  <div class="card">
+    <h3>💡 一个设计取向，解释你看到的所有界面</h3>
+    <p><b>复制是最高频动作</b>，所以卡片全身可点；编辑/删除藏在角落，删除要点两下（内联确认）防止手滑。</p>
+    <p>主界面只有「列表」和「编辑」两个视图，<b>不做弹窗、不做抽屉</b>——因为侧边栏很窄，还要兼容独立标签页。</p>
+  </div>
+</section>
+
+<!-- ============ 03 架构分层 ============ -->
+<section id="s3">
+  <div class="sec-head"><span class="sec-num">03</span><h2>架构：四层楼，依赖只往下走</h2></div>
+  <p class="sec-lead">这是本项目最重要的规则。看懂这张图，就知道任何代码「该放哪、不能放哪」。</p>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 860 400" width="100%" role="img" aria-label="四层架构图">
+      <defs>
+        <marker id="arr2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#9a938c"/>
+        </marker>
+      </defs>
+
+      <!-- 入口层 -->
+      <rect x="170" y="20" width="520" height="72" rx="12" fill="#fbf1e0" stroke="#c07a1e" stroke-width="2"/>
+      <text x="195" y="52" font-size="17" font-weight="800" fill="#c07a1e">入口层 entrypoints</text>
+      <text x="195" y="76" font-size="13.5" fill="#6f6963">只负责挂载和接线，不放业务逻辑</text>
+
+      <line x1="430" y1="94" x2="430" y2="126" stroke="#9a938c" stroke-width="2.5" marker-end="url(#arr2)"/>
+
+      <!-- 表现层 -->
+      <rect x="170" y="130" width="520" height="72" rx="12" fill="#e6f4f0" stroke="#2e8b74" stroke-width="2"/>
+      <text x="195" y="162" font-size="17" font-weight="800" fill="#2e8b74">表现层 ui</text>
+      <text x="195" y="186" font-size="13.5" fill="#6f6963">Vue 组件 + composables，把用户动作翻译成领域操作</text>
+
+      <line x1="430" y1="204" x2="430" y2="236" stroke="#9a938c" stroke-width="2.5" marker-end="url(#arr2)"/>
+
+      <!-- 基础设施层 -->
+      <rect x="170" y="240" width="520" height="72" rx="12" fill="#e9f1fa" stroke="#2f6fb0" stroke-width="2"/>
+      <text x="195" y="272" font-size="17" font-weight="800" fill="#2f6fb0">基础设施层 infra</text>
+      <text x="195" y="296" font-size="13.5" fill="#6f6963">浏览器 API 的唯一入口：storage / 剪贴板 / 下载</text>
+
+      <line x1="430" y1="314" x2="430" y2="346" stroke="#9a938c" stroke-width="2.5" marker-end="url(#arr2)"/>
+
+      <!-- 领域层 -->
+      <rect x="170" y="350" width="520" height="44" rx="12" fill="#f1ecfb" stroke="#7c5cbf" stroke-width="2"/>
+      <text x="430" y="378" text-anchor="middle" font-size="17" font-weight="800" fill="#7c5cbf">领域层 domain · 纯业务规则（无浏览器 API）</text>
+
+      <!-- shared 侧挂 -->
+      <rect x="710" y="240" width="130" height="154" rx="12" fill="#efedea" stroke="#6b625e" stroke-width="2" stroke-dasharray="6 4"/>
+      <text x="775" y="290" text-anchor="middle" font-size="15" font-weight="800" fill="#6b625e">公共层</text>
+      <text x="775" y="312" text-anchor="middle" font-size="15" font-weight="800" fill="#6b625e">shared</text>
+      <text x="775" y="338" text-anchor="middle" font-size="12" fill="#6f6963">常量/工具</text>
+      <text x="775" y="356" text-anchor="middle" font-size="12" fill="#6f6963">谁都能用</text>
+
+      <text x="60" y="470" font-size="13" fill="#9a938c">箭头方向 = 允许的依赖方向。上层可以叫下层，下层永远不知道上层存在。</text>
+    </svg>
+  </figure>
+
+  <table>
+    <tr><th>层</th><th>目录</th><th>放什么</th><th>能依赖</th></tr>
+    <tr><td><span class="tag entry">入口</span></td><td><code class="path">src/entrypoints/</code></td><td>扩展入口（background、侧边栏、设置页的挂载）</td><td>ui / infra / domain</td></tr>
+    <tr><td><span class="tag ui">表现</span></td><td><code class="path">src/ui/</code></td><td>Vue 组件、composables、全局样式</td><td>domain / infra / shared</td></tr>
+    <tr><td><span class="tag infra">基建</span></td><td><code class="path">src/infra/</code></td><td>chrome.storage、剪贴板、文件下载、数据清洗</td><td>domain / shared</td></tr>
+    <tr><td><span class="tag domain">领域</span></td><td><code class="path">src/domain/</code></td><td>类型定义 + 纯业务规则（增删改查、筛选、导出格式）</td><td>只有自己</td></tr>
+    <tr><td><span class="tag shared">公共</span></td><td><code class="path">src/shared/</code></td><td>常量与通用工具（如 <code>timestamp()</code>）</td><td>只有自己</td></tr>
+  </table>
+
+  <div class="card" style="margin-top:16px">
+    <h3>🚫 三条绝对禁止（机器会自动查）</h3>
+    <p>1. <code class="path">domain/</code> 里出现 <code>chrome.*</code>、<code>window</code>、<code>document</code>、<code>vue</code> —— 禁止。领域函数必须是纯函数。</p>
+    <p>2. <code class="path">ui/</code> 里直接调 <code>chrome.storage.*</code> —— 禁止，必须走 <code class="path">infra/storage.ts</code>。</p>
+    <p>3. 任何层反向依赖上层 —— 禁止。由 <code>npm run check:arch</code> 解析语法树自动校验。</p>
+  </div>
+</section>
+
+<!-- ============ 04 数据流 ============ -->
+<section id="s4">
+  <div class="sec-head"><span class="sec-num">04</span><h2>数据怎么流动</h2></div>
+  <p class="sec-lead">两个最高频的场景走一遍：保存一条提示词、复制一条提示词。</p>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 860 300" width="100%" role="img" aria-label="保存提示词的数据流">
+      <defs>
+        <marker id="arr3" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+          <path d="M0 0 L9 4.5 L0 9 z" fill="#c77560"/>
+        </marker>
+      </defs>
+
+      <!-- 步骤盒子 -->
+      <g font-family="inherit">
+        <rect x="20" y="40" width="150" height="86" rx="12" fill="#e6f4f0" stroke="#2e8b74" stroke-width="2"/>
+        <circle cx="42" cy="62" r="11" fill="#2e8b74"/><text x="42" y="67" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">1</text>
+        <text x="95" y="66" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2c2a29">用户点保存</text>
+        <text x="95" y="90" text-anchor="middle" font-size="12" fill="#6f6963">PromptEditor.vue</text>
+        <text x="95" y="108" text-anchor="middle" font-size="12" fill="#6f6963">发出 save 事件</text>
+
+        <rect x="205" y="40" width="150" height="86" rx="12" fill="#e6f4f0" stroke="#2e8b74" stroke-width="2"/>
+        <circle cx="227" cy="62" r="11" fill="#2e8b74"/><text x="227" y="67" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">2</text>
+        <text x="280" y="66" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2c2a29">根组件接事件</text>
+        <text x="280" y="90" text-anchor="middle" font-size="12" fill="#6f6963">sidepanel/App.vue</text>
+        <text x="280" y="108" text-anchor="middle" font-size="12" fill="#6f6963">调 savePrompt()</text>
+
+        <rect x="390" y="40" width="150" height="86" rx="12" fill="#e6f4f0" stroke="#2e8b74" stroke-width="2"/>
+        <circle cx="412" cy="62" r="11" fill="#2e8b74"/><text x="412" y="67" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">3</text>
+        <text x="465" y="66" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2c2a29">状态中心提交</text>
+        <text x="465" y="90" text-anchor="middle" font-size="12" fill="#6f6963">useLibrary.commit()</text>
+        <text x="465" y="108" text-anchor="middle" font-size="12" fill="#6f6963">串行化，防多页面覆盖</text>
+
+        <rect x="575" y="40" width="130" height="86" rx="12" fill="#f1ecfb" stroke="#7c5cbf" stroke-width="2"/>
+        <circle cx="597" cy="62" r="11" fill="#7c5cbf"/><text x="597" y="67" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">4</text>
+        <text x="640" y="66" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2c2a29">领域规则</text>
+        <text x="640" y="90" text-anchor="middle" font-size="12" fill="#6f6963">domain/prompt.ts</text>
+        <text x="640" y="108" text-anchor="middle" font-size="12" fill="#6f6963">upsertPrompt()</text>
+
+        <rect x="740" y="40" width="105" height="86" rx="12" fill="#e9f1fa" stroke="#2f6fb0" stroke-width="2"/>
+        <circle cx="762" cy="62" r="11" fill="#2f6fb0"/><text x="762" y="67" text-anchor="middle" font-size="13" font-weight="800" fill="#fff">5</text>
+        <text x="792" y="66" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2c2a29">写存储</text>
+        <text x="792" y="90" text-anchor="middle" font-size="12" fill="#6f6963">infra/storage.ts</text>
+        <text x="792" y="108" text-anchor="middle" font-size="12" fill="#6f6963">Web Lock 内改写</text>
+
+        <line x1="170" y1="83" x2="200" y2="83" stroke="#c77560" stroke-width="2.5" marker-end="url(#arr3)"/>
+        <line x1="355" y1="83" x2="385" y2="83" stroke="#c77560" stroke-width="2.5" marker-end="url(#arr3)"/>
+        <line x1="540" y1="83" x2="570" y2="83" stroke="#c77560" stroke-width="2.5" marker-end="url(#arr3)"/>
+        <line x1="705" y1="83" x2="735" y2="83" stroke="#c77560" stroke-width="2.5" marker-end="url(#arr3)"/>
+
+        <!-- 回程 -->
+        <path d="M 792 126 L 792 190 L 95 190 L 95 131" fill="none" stroke="#2e8b74" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arr3)"/>
+        <text x="440" y="212" text-anchor="middle" font-size="13.5" fill="#2e8b74" font-weight="700">保存成功 → onChanged 广播 → 各界面刷新 → toast 显示「已保存」</text>
+
+        <!-- 冲突分支 -->
+        <rect x="205" y="240" width="450" height="46" rx="10" fill="#fdeeeC" stroke="#b85b50" stroke-width="1.6"/>
+        <text x="430" y="268" text-anchor="middle" font-size="13.5" fill="#b85b50">冲突时不覆盖：提示「已被删除 / 已被修改」，草稿保留，可另存为新提示词</text>
+      </g>
+    </svg>
+    <figcaption>保存路径：组件 → 根组件 → composable → 领域 → 基建。只有全部成功才更新界面。</figcaption>
+  </figure>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>📋 复制的路径（最短）</h3>
+      <p>点卡片 → <code>PromptCard.vue</code> 发出 <code>copy</code> 事件 → <code>App.vue</code> 调 <code class="path">infra/clipboard.ts</code> 的 <code>copyText()</code>（带降级方案）→ 成功 → toast「已复制原文」。</p>
+    </div>
+    <div class="card">
+      <h3>🔒 为什么绕这么远</h3>
+      <p>侧边栏、设置页、右键菜单可能<b>同时改同一份数据</b>。所有写入统一走 <code>useLibrary.commit()</code>，在共享 Web Lock 里「读最新 → 改 → 写回」，防止用旧数据覆盖新数据。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 05 文件地图 ============ -->
+<section id="s5">
+  <div class="sec-head"><span class="sec-num">05</span><h2>前端文件地图</h2></div>
+  <p class="sec-lead">改前端 = 基本只动 <code class="path">src/ui/</code>。这张树告诉你每个文件是干嘛的。</p>
+
+  <div class="card">
+    <h3><span class="tag ui">ui</span> src/ui/ —— 你的主战场</h3>
+    <table>
+      <tr><th>文件</th><th>角色</th></tr>
+      <tr><td><code class="path">sidepanel/App.vue</code></td><td>侧边栏/主标签页根组件。视图切换（列表 ⇄ 编辑）、事件接线</td></tr>
+      <tr><td><code class="path">settings/App.vue</code></td><td>设置页根组件，组装各个设置面板</td></tr>
+      <tr><td><code class="path">components/AppHeader.vue</code></td><td>顶栏：新建按钮、去设置</td></tr>
+      <tr><td><code class="path">components/FilterBar.vue</code></td><td>搜索框 + 文件夹单选 + 标签多选</td></tr>
+      <tr><td><code class="path">components/PromptList.vue</code></td><td>列表容器 + 空状态</td></tr>
+      <tr><td><code class="path">components/PromptCard.vue</code></td><td>单条卡片：整卡可点复制、角落编辑/删除（删除两下确认）</td></tr>
+      <tr><td><code class="path">components/PromptEditor.vue</code></td><td>新建/编辑表单</td></tr>
+      <tr><td><code class="path">components/TagInput.vue</code></td><td>标签输入框</td></tr>
+      <tr><td><code class="path">components/ToastBar.vue</code></td><td>底部轻提示</td></tr>
+      <tr><td><code class="path">components/settings/*.vue</code></td><td>设置页面板：文件夹 / 标签 / 数据</td></tr>
+      <tr><td><code class="path">composables/useLibrary.ts</code></td><td><b>状态中心</b>：数据加载、commit 写入、全部写操作</td></tr>
+      <tr><td><code class="path">composables/useFilters.ts</code></td><td>筛选逻辑编排</td></tr>
+      <tr><td><code class="path">composables/useToast.ts</code></td><td>toast 状态</td></tr>
+      <tr><td><code class="path">styles/global.css</code></td><td><b>设计令牌</b>：颜色/圆角/间距/字体全部在这里</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3><span class="tag entry">入口</span> src/entrypoints/ —— 只接线</h3>
+    <table>
+      <tr><th>文件</th><th>作用</th></tr>
+      <tr><td><code class="path">background.ts</code></td><td>后台 service worker：右键菜单、打开主界面</td></tr>
+      <tr><td><code class="path">sidepanel/main.ts</code> + <code class="path">index.html</code></td><td>侧边栏挂载点</td></tr>
+      <tr><td><code class="path">library/main.ts</code> + <code class="path">index.html</code></td><td>独立标签页主界面挂载点</td></tr>
+      <tr><td><code class="path">options/main.ts</code> + <code class="path">index.html</code></td><td>设置页挂载点</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>🗺️ 想改 X，去改 Y（速查表）</h3>
+    <table>
+      <tr><th>你想…</th><th>改这里</th></tr>
+      <tr><td>换个颜色 / 圆角 / 间距</td><td><code class="path">ui/styles/global.css</code> 顶部的 <code>--pb-*</code> 变量</td></tr>
+      <tr><td>改卡片长相</td><td><code class="path">components/PromptCard.vue</code></td></tr>
+      <tr><td>加一个筛选维度</td><td><code class="path">domain/prompt.ts</code> 的 <code>filterPrompts()</code> → <code class="path">composables/useFilters.ts</code> → <code class="path">components/FilterBar.vue</code></td></tr>
+      <tr><td>提示词加字段</td><td><code class="path">domain/types.ts</code> → <code class="path">infra/sanitize.ts</code> → 表单组件</td></tr>
+      <tr><td>加一个设置项</td><td><code class="path">ui/components/settings/</code> 下面新建 panel → <code class="path">settings/App.vue</code> 组装</td></tr>
+      <tr><td>改交互逻辑/状态</td><td><code class="path">composables/useLibrary.ts</code></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 06 铁律 ============ -->
+<section id="s6">
+  <div class="sec-head"><span class="sec-num">06</span><h2>改前端前，必守的规则</h2></div>
+  <p class="sec-lead">违反任意一条，<code>npm run verify</code> 或代码审查会挂。逐条对照。</p>
+
+  <ul class="check">
+    <li><b>颜色/圆角/间距一律用 CSS 变量。</b>不写死色值。变量名以 <code>--pb-</code> 开头，定义在 <code class="path">global.css</code>。例：<code>background: var(--pb-surface)</code>。</li>
+    <li><b>组件只负责渲染和转发事件。</b>业务逻辑放 composable（如 <code>useLibrary</code>），状态不放散在组件里。</li>
+    <li><b>写数据必须走 <code>useLibrary.commit()</code>。</b>不直接碰 storage；编辑保存要带上打开表单时的原记录，让系统检测冲突。</li>
+    <li><b>界面文字用简体中文</b>，注释也用中文；代码标识符用英文。</li>
+    <li><b>破坏性操作用内联二次确认</b>（点删除 → 出现「确认删除? 是/否」），不用 <code>window.confirm</code>。</li>
+    <li><b>反馈用底部 toast</b>（<code>useToast</code>），不用 <code>alert</code>。</li>
+    <li class="dont"><b>不要在 ui/ 里 import chrome API。</b>需要浏览器能力时，在 <code class="path">infra/</code> 加一个封装函数再调。</li>
+    <li class="dont"><b>不要把业务逻辑写进 .vue 模板。</b>模板保持声明式；复杂判断抽成函数或 computed。</li>
+  </ul>
+
+  <div class="card">
+    <h3>🎨 设计令牌速查（最常用的一批）</h3>
+    <table>
+      <tr><th>变量</th><th>含义</th><th>变量</th><th>含义</th></tr>
+      <tr><td><code>--pb-bg</code></td><td>页面底色</td><td><code>--pb-accent</code></td><td>强调色（暖橘）</td></tr>
+      <tr><td><code>--pb-surface</code></td><td>卡片底色</td><td><code>--pb-danger</code></td><td>危险/删除</td></tr>
+      <tr><td><code>--pb-text</code> / <code>--pb-text-muted</code></td><td>正文 / 次要文字</td><td><code>--pb-radius</code></td><td>默认圆角</td></tr>
+      <tr><td><code>--pb-border</code></td><td>边框</td><td><code>--pb-space-*</code></td><td>间距刻度（4/8/12…）</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 07 命令 ============ -->
+<section id="s7">
+  <div class="sec-head"><span class="sec-num">07</span><h2>常用命令</h2></div>
+  <p class="sec-lead">提交前跑最后一条；纯 chrome-local 构建，无需 manifest 审阅。</p>
+
+  <table>
+    <tr><th>命令</th><th>什么时候用</th></tr>
+    <tr><td><code>npm run dev</code></td><td>开发模式，热更新，自动开 Chrome</td></tr>
+    <tr><td><code>npm run build</code></td><td>正式本地构建（chrome-local）</td></tr>
+    <tr><td><code>npm test</code></td><td>领域逻辑与导出格式回归测试</td></tr>
+    <tr><td><code>npm run typecheck</code></td><td>类型检查</td></tr>
+    <tr><td><code>npm run check:arch</code></td><td>校验分层依赖方向（防架构犯规）</td></tr>
+    <tr><td><code>npm run verify</code></td><td><b>= typecheck + check:arch</b>，提交前必跑</td></tr>
+  </table>
+</section>
+
+<!-- ============ 结尾 ============ -->
+<div class="footer-cta">
+  <h2>👉 下一步</h2>
+  <p>指南就到这里。现在告诉我：<b>你想改前端的哪一部分？</b></p>
+  <p>比如「卡片想改成两列」「筛选栏要加个排序」「换个主题色」——说出口，我直接按上面的规则动手改。</p>
+</div>
+
+</div>
+</body>
+</html>

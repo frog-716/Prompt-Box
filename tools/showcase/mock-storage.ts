@@ -1,5 +1,12 @@
 import type { PromptBoxData } from '../../src/domain/types';
-import type { StorageStatus } from '../../src/infra/sync-storage';
+
+export interface StorageStatus {
+  mode: 'local';
+  state: 'online';
+  revision: null;
+  pending: false;
+  message: string;
+}
 
 const folderId = 'demo-folder-writing';
 const day = 86_400_000;
@@ -62,11 +69,11 @@ let data: PromptBoxData = {
 
 const listeners = new Set<(data: PromptBoxData) => void>();
 const status: StorageStatus = {
-  mode: 'shared',
+  mode: 'local',
   state: 'online',
-  revision: 8,
+  revision: null,
   pending: false,
-  message: '演示预览：同机共享服务在线',
+  message: '演示预览：数据保存在本地',
 };
 
 const copy = <T>(value: T): T => structuredClone(value);
@@ -94,24 +101,4 @@ export function getStorageStatus(): StorageStatus {
 export function onStorageStatusChanged(listener: (status: StorageStatus) => void): () => void {
   listener(getStorageStatus());
   return () => {};
-}
-
-export async function getSyncPairingStatus(): Promise<null> {
-  return null;
-}
-
-export async function startSyncPairing(): Promise<never> {
-  throw new Error('演示预览不提供配对操作。');
-}
-
-export async function createSyncPairingInvite(): Promise<never> {
-  throw new Error('演示预览不提供配对操作。');
-}
-
-export async function joinSyncPairing(): Promise<void> {}
-export async function revokeSyncPairing(): Promise<void> {}
-export async function retryPendingSync(): Promise<void> {}
-export async function discardPendingSync(): Promise<void> {}
-export async function readPendingSyncDraft(): Promise<null> {
-  return null;
 }

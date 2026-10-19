@@ -16,10 +16,6 @@ export default defineConfig({
       { find: '@', replacement: resolve(projectRoot, 'src') },
     ],
   },
-  define: {
-    __PROMPT_BOX_BUILD_CLIENT_ID__: 'null',
-    __PROMPT_BOX_BUILD_SURFACE__: '"chrome"',
-  },
   server: {
     host: '127.0.0.1',
     strictPort: false,
