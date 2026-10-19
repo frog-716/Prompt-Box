@@ -65,8 +65,7 @@ src/
 ├── entrypoints/            # WXT 入口，每个子目录 = 一个扩展入口
 │   ├── background.ts       # service worker：右键菜单 + 侧栏/标签页入口行为
 │   ├── library/            # 图标打开的独立主界面标签页
-│   ├── sidepanel/          # Chrome 侧边栏挂载入口
-│   └── options/            # 设置页
+│   └── sidepanel/          # Chrome 侧边栏挂载入口
 ├── domain/                 # 纯业务逻辑
 │   ├── types.ts            # Prompt / Folder / PromptBoxData 等模型
 │   ├── prompt.ts           # 提示词的增删改查、筛选、标签操作
@@ -78,9 +77,8 @@ src/
 │   ├── clipboard.ts        # 复制，含降级方案
 │   └── markdown-export.ts  # Markdown 文件下载
 ├── ui/
-│   ├── sidepanel/App.vue   # 侧边栏根组件
-│   ├── settings/App.vue    # 设置页根组件
-│   ├── components/         # 可复用组件（settings/ 下为设置页专用）
+│   ├── sidepanel/App.vue   # 侧边栏根组件（view 状态机：list/editor/settings）
+│   ├── components/         # 可复用组件（SettingsView.vue = 设置视图；settings/ 下为设置面板）
 │   ├── composables/        # 状态编排
 │   └── styles/global.css   # 设计令牌 + 全局样式
 └── shared/                 # 常量与通用工具
@@ -88,7 +86,7 @@ src/
 
 完整结构与数据流见 [`MAP.md`](./MAP.md)。领域与导出格式测试位于 `tests/`。
 
-> 数据备份只通过**设置页的 Markdown 导出**（整体复制保存）；不提供 JSON 备份/恢复功能。所有数据仅存于 `chrome.storage.local`。
+> 数据备份只通过**设置视图的 Markdown 导出**（整体复制保存）；不提供 JSON 备份/恢复功能。所有数据仅存于 `chrome.storage.local`。
 
 ---
 
@@ -120,7 +118,7 @@ WXT 输出目录为 `.output/chrome-local/chrome-mv3`，构建目标固定为 `c
 
 界面的写操作统一经过 `useLibrary.commit()`；右键菜单也调用
 `infra/storage.updateData()`。该方法使用 Web Lock 串行读改写，
-避免并行打开侧边栏和设置页时用旧快照覆盖新数据。不要直接写 storage。编辑保存必须携带打开表单时的原记录；如果最新记录已变化或被删除，
+避免并行打开侧边栏与设置视图时用旧快照覆盖新数据。不要直接写 storage。编辑保存必须携带打开表单时的原记录；如果最新记录已变化或被删除，
 返回冲突或缺失结果，保留草稿，不显示保存成功。
 
 ### 数据模型
@@ -136,6 +134,7 @@ WXT 输出目录为 `.output/chrome-local/chrome-mv3`，构建目标固定为 `c
 
 - 颜色、圆角、间距一律用 `global.css` 里的 CSS 变量，**不要写死色值**。
 - 组件只负责渲染与事件转发，状态放在 composables。
+- 主界面是三态视图：`sidepanel/App.vue` 用 `view` 状态机在 `list`（列表）/`editor`（编辑）/`settings`（设置）间切换，**不新开标签页**；设置入口在 `FilterBar` 操作区，`SettingsView` 通过 `@close` 返回列表。
 - 破坏性操作（删除）用内联二次确认，不用 `window.confirm`。
 - 反馈用底部 toast，不用 alert。
 
@@ -151,7 +150,7 @@ WXT 输出目录为 `.output/chrome-local/chrome-mv3`，构建目标固定为 `c
 |---|---|
 | 加一个提示词字段 | `domain/types.ts` → `infra/sanitize.ts` 的 `sanitizePrompt()` → 表单组件 |
 | 加一种筛选维度 | `domain/prompt.ts` 的 `filterPrompts()` → `useFilters` → `FilterBar.vue` |
-| 加一个设置项 | `ui/components/settings/` 下新建 panel → `ui/settings/App.vue` 组装 |
+| 加一个设置项 | `ui/components/settings/` 下新建 panel → `ui/components/SettingsView.vue` 组装 |
 | 加一个右键菜单项 | `entrypoints/background.ts` 的 `buildContextMenu()` |
 | 换存储后端（如 IndexedDB） | 只改 `infra/storage.ts`，上层无感 |
 | 换 UI 框架（如 React） | 只改 `ui/` 与 `entrypoints/*/main.ts`，domain 与 infra 不动 |

@@ -2,14 +2,15 @@
 
 ## 结构与依赖
 
-`src/entrypoints/` 挂载扩展入口；`src/ui/` 提供侧边栏/标签页主界面与设置页；
+`src/entrypoints/` 挂载扩展入口；`src/ui/` 提供侧边栏与主界面标签页，
+界面为三态视图（`list` 列表 / `editor` 编辑 / `settings` 设置，均在侧边栏内切换）；
 `src/domain/` 保存提示词、文件夹、标签规则及 Markdown 导出格式；
 `src/infra/` 封装 Chrome storage、剪贴板和下载；`src/shared/` 放通用常量。
 依赖只向下流动，架构边界由 `npm run check:arch` 校验。
 
 ## 主流程
 
-- **保存与同步**：侧边栏、设置页和右键菜单通过 `infra/storage.updateData()`
+- **保存与同步**：侧边栏、设置视图和右键菜单通过 `infra/storage.updateData()`
   在共享 Web Lock 中读取最新数据、修改并写回；`chrome.storage.onChanged`
   让已打开的界面刷新。编辑保存在锁内核对打开表单时的原记录；记录已删除或被修改时
   返回明确结果，不覆盖最新内容，界面保留草稿并允许另存为新提示词。
@@ -28,7 +29,8 @@
 
 - `src/entrypoints/background.ts`：打开主界面标签页、右键保存选中文字。
 - `src/entrypoints/library/main.ts` → `src/ui/sidepanel/App.vue`：主界面标签页，提供记录、筛选、复制。
-- `src/entrypoints/options/main.ts` → `src/ui/settings/App.vue`：导出、文件夹与标签管理。
+- `src/ui/components/SettingsView.vue`：侧边栏内设置视图（`sidepanel/App.vue` 的
+  `view` 状态机 `list/editor/settings` 三态之一，可返回列表）：导出、文件夹与标签管理。
 - `src/ui/composables/useLibrary.ts`：界面状态、数据加载和写入编排。
 - `src/infra/storage.ts`：本地 `chrome.storage.local` 的唯一入口，Web Lock 串行读写；数据清洗在 `sanitize.ts`。
 - `src/infra/sanitize.ts`：把新旧存储形状规整为标准领域数据，纯函数可独立回归；重复提示词 ID 修复时保留内容，同名文件夹合并时保留归属，未知数据版本阻止写回。
